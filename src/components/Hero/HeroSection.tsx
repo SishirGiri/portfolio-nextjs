@@ -12,24 +12,38 @@ export default function HeroSection() {
       <HeroCanvas />
       <div className="scanlines" />
 
+      <div className="hero-gradient-top" />
+      <div className="hero-gradient-bottom" />
+
+      <div className="hero-orb hero-orb-1" />
+      <div className="hero-orb hero-orb-2" />
+      <div className="hero-orb hero-orb-3" />
+
       <div className="hero-content">
         <div className="hero-badge">
           <span className="badge-dot" />
           Available for opportunities
         </div>
 
-        <p className="hero-pre">HELLO, WORLD. I&apos;M</p>
+        <div className="hero-pre-line">
+          <span className="pre-deco" />
+          <p className="hero-pre">HELLO, WORLD. I&apos;M</p>
+          <span className="pre-deco" />
+        </div>
 
-        <h1
-          className="hero-name"
-          data-text="Sishir Bharati"
-        >
+        <h1 className="hero-name" data-text="Sishir Bharati">
           Sishir Bharati
         </h1>
 
         <p className="hero-tagline">
           <Typewriter />
         </p>
+
+        <div className="hero-divider">
+          <span className="divider-dot" />
+          <span className="divider-line" />
+          <span className="divider-dot" />
+        </div>
 
         <p className="hero-sub">
           Building intelligent systems from the foothills of Nepal. Turning
@@ -73,6 +87,13 @@ export default function HeroSection() {
           <div className="scroll-wheel" />
         </div>
         <span>Scroll to explore</span>
+      </div>
+
+      <div className="hero-side-line hero-side-left">
+        <span /><span /><span />
+      </div>
+      <div className="hero-side-line hero-side-right">
+        <span /><span /><span />
       </div>
     </section>
   );

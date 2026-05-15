@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { NAV_LINKS } from "@/lib/constants";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -27,8 +29,27 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.classList.add("nav-open");
+    } else {
+      document.body.classList.remove("nav-open");
+    }
+    return () => document.body.classList.remove("nav-open");
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+    };
+    if (menuOpen) {
+      document.addEventListener("keydown", onKey);
+      return () => document.removeEventListener("keydown", onKey);
+    }
+  }, [menuOpen, closeMenu]);
+
   const handleNavClick = (href: string) => {
-    setMenuOpen(false);
+    closeMenu();
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -48,7 +69,12 @@ export default function Navbar() {
           <span className="logo-bracket">]</span>
         </a>
 
-        <ul className={`nav-links${menuOpen ? " open" : ""}`}>
+        <ul
+          className={`nav-links${menuOpen ? " open" : ""}`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeMenu();
+          }}
+        >
           {NAV_LINKS.map((link) => (
             <li key={link.section}>
               <a
