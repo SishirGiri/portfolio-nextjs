@@ -16,7 +16,7 @@ export default function ProjectsSection() {
           <div className="section-header">
             <span className="section-number">02</span>
             <h2 className="section-title">
-              Featured <em>Projects</em>
+              <em>Projects</em>
             </h2>
             <div className="section-line" />
           </div>
