@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#050810" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Sishir Bharati — Developer & AI Enthusiast</title>
   <meta name="description" content="Personal portfolio of Sishir Bharati – Aspiring Developer and AI Enthusiast from Nepal." />
 
@@ -35,7 +38,7 @@
 
       <ul class="nav-links" id="navLinks">
         <li><a href="#about"    class="nav-link" data-section="about">About</a></li>
-        <li><a href="#projects" class="nav-link" data-section="projects">Featured Projects</a></li>
+        <li><a href="#projects" class="nav-link" data-section="projects">Projects</a></li>
         <li><a href="#skills"   class="nav-link" data-section="skills">Skills</a></li>
         <li><a href="#contact"  class="nav-link" data-section="contact">Contact</a></li>
       </ul>
@@ -50,27 +53,42 @@
        HERO SECTION
   ══════════════════════════════════════ -->
   <section id="hero" class="hero">
-    <!-- Three.js canvas fills this section -->
     <canvas id="heroCanvas"></canvas>
 
-    <!-- Scanline overlay for CRT effect -->
     <div class="scanlines"></div>
 
+    <!-- Gradient overlays for depth -->
+    <div class="hero-gradient-top"></div>
+    <div class="hero-gradient-bottom"></div>
+
+    <!-- Decorative floating orbs -->
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+
     <div class="hero-content">
-      <!-- Glitch badge -->
       <div class="hero-badge">
         <span class="badge-dot"></span>
         Available for opportunities
       </div>
 
-      <p class="hero-pre">HELLO, WORLD. I'M</p>
+      <div class="hero-pre-line">
+        <span class="pre-deco"></span>
+        <p class="hero-pre">HELLO, WORLD. I'M</p>
+        <span class="pre-deco"></span>
+      </div>
 
-      <!-- Glitch name -->
-      <h1 class="hero-tagline" style="font-size: 2.5rem;" data-text="Sishir Bharati">Sishir Bharati</h1>
+      <h1 class="hero-tagline hero-name" data-text="Sishir Bharati">Sishir Bharati</h1>
 
       <p class="hero-tagline">
         <span class="type-cursor" id="typeTarget"></span>
       </p>
+
+      <div class="hero-divider">
+        <span class="divider-dot"></span>
+        <span class="divider-line"></span>
+        <span class="divider-dot"></span>
+      </div>
 
       <p class="hero-sub">
         Building intelligent systems from the foothills of Nepal.
@@ -85,7 +103,6 @@
         <a href="#contact" class="btn btn-ghost">Get In Touch</a>
       </div>
 
-      <!-- Floating stats -->
       <div class="hero-stats">
         <div class="stat-pill">
           <span class="stat-value">5+</span>
@@ -102,12 +119,19 @@
       </div>
     </div>
 
-    <!-- Scroll indicator -->
     <div class="scroll-indicator">
       <div class="scroll-mouse">
         <div class="scroll-wheel"></div>
       </div>
       <span>Scroll to explore</span>
+    </div>
+
+    <!-- Side decorative elements -->
+    <div class="hero-side-line hero-side-left">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="hero-side-line hero-side-right">
+      <span></span><span></span><span></span>
     </div>
   </section>
 
@@ -197,7 +221,7 @@
     <div class="container">
       <div class="section-header reveal">
         <span class="section-number">02</span>
-        <h2 class="section-title">Featured <em>Projects</em></h2>
+        <h2 class="section-title"><em>Projects</em></h2>
         <div class="section-line"></div>
       </div>
 

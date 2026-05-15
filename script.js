@@ -349,12 +349,26 @@ const isMobile = window.innerWidth < 768;
   const hamburger = document.getElementById('hamburger');
   const navMenu   = document.getElementById('navLinks');
 
+  function openMenu() {
+    hamburger.classList.add('open');
+    navMenu.classList.add('open');
+    document.body.classList.add('nav-open');
+  }
+
+  function closeMenu() {
+    hamburger.classList.remove('open');
+    navMenu.classList.remove('open');
+    document.body.classList.remove('nav-open');
+  }
+
+  function isMenuOpen() {
+    return navMenu.classList.contains('open');
+  }
+
   // Scroll handler
   function onScroll() {
-    // Scrolled class for background
     navbar.classList.toggle('scrolled', window.scrollY > 50);
 
-    // Active section highlight
     const sections = ['about', 'projects', 'skills', 'contact'];
     let activeId = '';
 
@@ -374,16 +388,22 @@ const isMobile = window.innerWidth < 768;
 
   // Hamburger toggle
   hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('open');
-    navMenu.classList.toggle('open');
+    if (isMenuOpen()) { closeMenu(); } else { openMenu(); }
   });
 
   // Close menu on link click
   navLinks.forEach((link) => {
-    link.addEventListener('click', () => {
-      hamburger.classList.remove('open');
-      navMenu.classList.remove('open');
-    });
+    link.addEventListener('click', closeMenu);
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isMenuOpen()) { closeMenu(); }
+  });
+
+  // Close on clicking the nav overlay background (not the links)
+  navMenu.addEventListener('click', (e) => {
+    if (e.target === navMenu) { closeMenu(); }
   });
 })();
 
