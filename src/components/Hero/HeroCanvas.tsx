@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -8,13 +8,11 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-function Particles() {
+function Particles({ isMobile }: { isMobile: boolean }) {
   const nebulaRef = useRef<THREE.Points>(null);
   const helixRef = useRef<THREE.Group>(null);
   const mouse = useRef({ x: 0, y: 0 });
   const { camera } = useThree();
-
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   const { starGeo, nebGeo, helixGroup, shapes } = useMemo(() => {
     const starCount = isMobile ? 600 : 1400;
@@ -68,11 +66,7 @@ function Particles() {
       }
       const curve = new THREE.CatmullRomCurve3(pts);
       const geo = new THREE.TubeGeometry(curve, strandPoints * 2, 0.06, 6, false);
-      const mat = new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.85,
-      });
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85 });
       return new THREE.Mesh(geo, mat);
     }
 
@@ -84,30 +78,16 @@ function Particles() {
       const t = i / rungCount;
       const angle = t * Math.PI * 2 * helixTurns;
       const y = t * helixHeight - helixHeight / 2;
-      const pA = new THREE.Vector3(
-        Math.cos(angle) * helixRadius,
-        y,
-        Math.sin(angle) * helixRadius
-      );
-      const pB = new THREE.Vector3(
-        Math.cos(angle + Math.PI) * helixRadius,
-        y,
-        Math.sin(angle + Math.PI) * helixRadius
-      );
+      const pA = new THREE.Vector3(Math.cos(angle) * helixRadius, y, Math.sin(angle) * helixRadius);
+      const pB = new THREE.Vector3(Math.cos(angle + Math.PI) * helixRadius, y, Math.sin(angle + Math.PI) * helixRadius);
       const mixedColor = colorA.clone().lerp(colorB, t);
       const rungGeo = new THREE.BufferGeometry().setFromPoints([pA, pB]);
-      const rungMat = new THREE.LineBasicMaterial({
-        color: mixedColor,
-        transparent: true,
-        opacity: 0.4,
-      });
+      const rungMat = new THREE.LineBasicMaterial({ color: mixedColor, transparent: true, opacity: 0.4 });
       hg.add(new THREE.Line(rungGeo, rungMat));
 
       [pA, pB].forEach((pt, idx) => {
         const sg2 = new THREE.SphereGeometry(0.1, 6, 6);
-        const sm = new THREE.MeshBasicMaterial({
-          color: idx === 0 ? colorA : colorB,
-        });
+        const sm = new THREE.MeshBasicMaterial({ color: idx === 0 ? colorA : colorB });
         const sph = new THREE.Mesh(sg2, sm);
         sph.position.copy(pt);
         hg.add(sph);
@@ -126,27 +106,19 @@ function Particles() {
     ];
 
     const floatingShapes = shapeData.map(({ geo, pos, rot, col }) => {
-      const mat = new THREE.MeshBasicMaterial({
-        color: col,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.35,
-      });
+      const mat = new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: 0.35 });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(...pos);
       return { mesh, rotSpeed: rot, floatOffset: Math.random() * Math.PI * 2 };
     });
 
-    return {
-      starGeo: sg,
-      nebGeo: ng,
-      helixGroup: hg,
-      shapes: floatingShapes,
-    };
+    return { starGeo: sg, nebGeo: ng, helixGroup: hg, shapes: floatingShapes };
   }, [isMobile]);
 
-  useFrame(({ clock }) => {
-    const elapsed = clock.getElapsedTime();
+  const startTime = useRef(Date.now());
+
+  useFrame(() => {
+    const elapsed = (Date.now() - startTime.current) / 1000;
 
     const targetX = lerp(camera.position.x, mouse.current.x * 1.5, 0.06);
     const targetY = lerp(camera.position.y, mouse.current.y * 0.5, 0.06);
@@ -175,14 +147,8 @@ function Particles() {
   return (
     <>
       <points geometry={starGeo}>
-        <pointsMaterial
-          color={0xaaccff}
-          size={0.12}
-          transparent
-          opacity={0.6}
-        />
+        <pointsMaterial color={0xaaccff} size={0.12} transparent opacity={0.6} />
       </points>
-
       <points ref={nebulaRef} geometry={nebGeo}>
         <pointsMaterial
           size={isMobile ? 0.22 : 0.18}
@@ -193,13 +159,10 @@ function Particles() {
           depthWrite={false}
         />
       </points>
-
       <primitive ref={helixRef} object={helixGroup} />
-
       {shapes.map(({ mesh }, i) => (
         <primitive key={i} object={mesh} />
       ))}
-
       <MouseTracker mouse={mouse} />
     </>
   );
@@ -214,24 +177,25 @@ function MouseTracker({ mouse }: { mouse: React.MutableRefObject<{ x: number; y:
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
   }, [mouse]);
-
   return null;
 }
 
 export default function HeroCanvas() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
+
   return (
     <Canvas
       className="heroCanvas"
       camera={{ position: [0, 0, 28], fov: 60 }}
-      gl={{
-        antialias: typeof window !== "undefined" && window.innerWidth >= 768,
-        alpha: true,
-        powerPreference: "high-performance",
-      }}
-      dpr={typeof window !== "undefined" ? Math.min(window.devicePixelRatio, window.innerWidth < 768 ? 1 : 2) : 1}
+      gl={{ alpha: true, powerPreference: "high-performance" }}
+      dpr={isMobile ? 1 : Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 2)}
       style={{ background: "transparent" }}
     >
-      <Particles />
+      <Particles isMobile={isMobile} />
     </Canvas>
   );
 }
