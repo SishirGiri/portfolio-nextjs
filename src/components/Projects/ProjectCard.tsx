@@ -46,7 +46,7 @@ export default function ProjectCard({
 
   return (
     <article
-      className="project-card reveal-up"
+      className="project-card"
       style={{ "--i": index } as React.CSSProperties}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}

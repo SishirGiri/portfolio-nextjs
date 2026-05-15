@@ -24,7 +24,9 @@ export default function ProjectsSection() {
 
         <div className="projects-grid">
           {projects.map((project, i) => (
-            <ProjectCard key={project.title} project={project} index={i} />
+            <ScrollReveal key={project.title} direction="up" delay={i * 0.1}>
+              <ProjectCard project={project} index={i} />
+            </ScrollReveal>
           ))}
         </div>
       </div>
