@@ -18,7 +18,7 @@ export default function HeroSection() {
           Available for opportunities
         </div>
 
-        <p className="hero-pre">Hello, World. I&apos;m</p>
+        <p className="hero-pre">HELLO, WORLD. I&apos;M</p>
 
         <h1
           className="hero-tagline"
