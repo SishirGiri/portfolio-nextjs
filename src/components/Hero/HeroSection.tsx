@@ -21,8 +21,7 @@ export default function HeroSection() {
         <p className="hero-pre">HELLO, WORLD. I&apos;M</p>
 
         <h1
-          className="hero-tagline"
-          style={{ fontSize: "2.5rem" }}
+          className="hero-name"
           data-text="Sishir Bharati"
         >
           Sishir Bharati

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { SITE, SOCIAL_LINKS } from "@/lib/constants";
+import ScrollReveal from "@/components/ui/ScrollReveal";
 
 const GitHubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor">
@@ -46,18 +47,36 @@ export default function ContactForm() {
     e.preventDefault();
     if (!formRef.current) return;
 
+    const form = formRef.current;
+    const name = (form.querySelector("#name") as HTMLInputElement).value.trim();
+    const email = (form.querySelector("#email") as HTMLInputElement).value.trim();
+    const message = (form.querySelector("#message") as HTMLTextAreaElement).value.trim();
+
+    if (!name) {
+      setFeedback({ type: "error", message: "Please enter your name." });
+      return;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFeedback({ type: "error", message: "Please enter a valid email address." });
+      return;
+    }
+    if (!message) {
+      setFeedback({ type: "error", message: "Please write a message." });
+      return;
+    }
+
     setSending(true);
     setFeedback(null);
 
     try {
       const res = await fetch(SITE.formspreeUrl, {
         method: "POST",
-        body: new FormData(formRef.current),
+        body: new FormData(form),
         headers: { Accept: "application/json" },
       });
       if (res.ok) {
         setFeedback({ type: "success", message: "Message sent successfully!" });
-        formRef.current.reset();
+        form.reset();
       } else {
         setFeedback({ type: "error", message: "Failed to send message. Please try again." });
       }
@@ -70,8 +89,8 @@ export default function ContactForm() {
 
   return (
     <div className="contact-layout">
-      <div className="contact-info">
-        <ScrollReveal direction="left">
+      <ScrollReveal direction="left">
+        <div className="contact-info">
           <div className="contact-card">
             <h3>Let&apos;s Build Something Together</h3>
             <p>
@@ -82,12 +101,7 @@ export default function ContactForm() {
             <div className="contact-details">
               <div className="contact-item">
                 <div className="ci-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                     <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -100,19 +114,14 @@ export default function ContactForm() {
               </div>
               <div className="contact-item">
                 <div className="ci-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                     <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
                   <span className="ci-label">Location</span>
-                  <span className="ci-value">Pokhara, Nepal &#x1F1F3;&#x1F1F5;</span>
+                  <span className="ci-value">Pokhara, Nepal</span>
                 </div>
               </div>
             </div>
@@ -136,64 +145,36 @@ export default function ContactForm() {
               })}
             </div>
           </div>
-        </ScrollReveal>
-      </div>
+        </div>
+      </ScrollReveal>
 
       <ScrollReveal direction="right">
-        <form
-          ref={formRef}
-          className="contact-form"
-          onSubmit={handleSubmit}
-          noValidate
-        >
+        <form ref={formRef} className="contact-form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label htmlFor="name">Your Name</label>
             <div className="input-wrap">
-              <input
-                type="text"
-                id="name"
-                name="from_name"
-                placeholder="Sishir Giri"
-                required
-              />
+              <input type="text" id="name" name="name" placeholder="Sishir Giri" required />
               <div className="input-line" />
             </div>
           </div>
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <div className="input-wrap">
-              <input
-                type="email"
-                id="email"
-                name="from_email"
-                placeholder="sishir@example.com"
-                required
-              />
+              <input type="email" id="email" name="email" placeholder="sishir@example.com" required />
               <div className="input-line" />
             </div>
           </div>
           <div className="form-group">
             <label htmlFor="subject">Subject</label>
             <div className="input-wrap">
-              <input
-                type="text"
-                id="subject"
-                name="subject"
-                placeholder="Project collaboration"
-              />
+              <input type="text" id="subject" name="subject" placeholder="Project collaboration" />
               <div className="input-line" />
             </div>
           </div>
           <div className="form-group">
             <label htmlFor="message">Message</label>
             <div className="input-wrap">
-              <textarea
-                id="message"
-                name="message"
-                rows={5}
-                placeholder="Tell me about your idea..."
-                required
-              />
+              <textarea id="message" name="message" rows={5} placeholder="Tell me about your idea..." required />
               <div className="input-line" />
             </div>
           </div>
@@ -211,14 +192,4 @@ export default function ContactForm() {
       </ScrollReveal>
     </div>
   );
-}
-
-function ScrollReveal({
-  children,
-  direction,
-}: {
-  children: React.ReactNode;
-  direction: "left" | "right" | "up" | "fade";
-}) {
-  return <div className={`reveal-${direction}`}>{children}</div>;
 }
