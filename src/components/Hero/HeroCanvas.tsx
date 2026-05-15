@@ -193,7 +193,7 @@ export default function HeroCanvas() {
       camera={{ position: [0, 0, 28], fov: 60 }}
       gl={{ alpha: true, powerPreference: "high-performance" }}
       dpr={isMobile ? 1 : Math.min(typeof window !== "undefined" ? window.devicePixelRatio : 1, 2)}
-      style={{ background: "transparent" }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "transparent" }}
     >
       <Particles isMobile={isMobile} />
     </Canvas>
