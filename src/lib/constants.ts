@@ -7,7 +7,7 @@ export const SITE = {
 
 export const NAV_LINKS = [
   { label: "About", href: "#about", section: "about" },
-  { label: "Projects", href: "#projects", section: "projects" },
+  { label: "Featured Projects", href: "#projects", section: "projects" },
   { label: "Skills", href: "#skills", section: "skills" },
   { label: "Contact", href: "#contact", section: "contact" },
 ];
@@ -16,7 +16,7 @@ export const TYPEWRITER_PHRASES = [
   "Aspiring Developer | AI Enthusiast",
   "Building Tomorrow's Solutions Today",
   "Python \u2022 JavaScript \u2022 C \u2022 AI/ML",
-  "From Kathmandu to the World",
+  "From Kathmandu to the World \uD83C\uDF0F",
 ];
 
 export const SOCIAL_LINKS = [

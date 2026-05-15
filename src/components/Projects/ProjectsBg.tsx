@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-function Dots() {
+function Dots({ isMobile }: { isMobile: boolean }) {
   const dotsRef = useRef<THREE.Points>(null);
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const startTime = useRef(Date.now());
 
   const geometry = useMemo(() => {
     const count = isMobile ? 200 : 500;
@@ -21,9 +21,10 @@ function Dots() {
     return geo;
   }, [isMobile]);
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (dotsRef.current) {
-      dotsRef.current.rotation.y = clock.getElapsedTime() * 0.06;
+      const elapsed = (Date.now() - startTime.current) / 1000;
+      dotsRef.current.rotation.y = elapsed * 0.06;
     }
   });
 
@@ -42,15 +43,21 @@ function Dots() {
 }
 
 export default function ProjectsBg() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
+
   return (
     <Canvas
       className="projectsBg"
       camera={{ position: [0, 0, 16], fov: 60 }}
       gl={{ alpha: true, antialias: false }}
       dpr={1}
-      style={{ background: "transparent" }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "transparent" }}
     >
-      <Dots />
+      <Dots isMobile={isMobile} />
     </Canvas>
   );
 }
