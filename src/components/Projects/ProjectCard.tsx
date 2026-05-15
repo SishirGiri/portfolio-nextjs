@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { projects } from "@/data/projects";
 
 const ExternalLinkIcon = () => (
@@ -88,9 +89,9 @@ export default function ProjectCard({
       </div>
       <div className="card-footer">
         <div className="card-tech">{project.tech}</div>
-        <a href={project.demoUrl} className="card-cta">
+        <Link href={`/projects/${project.slug}`} className="card-cta">
           Explore &rarr;
-        </a>
+        </Link>
       </div>
     </article>
   );
