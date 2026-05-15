@@ -2,9 +2,7 @@ export const SITE = {
   name: "Sishir Bharati",
   email: "girisishir4@gmail.com",
   location: "Pokhara, Nepal",
-  emailjsPublicKey: "YkGZJ_bLq9XX3yvbg",
-  emailjsServiceId: "service_mh516v7",
-  emailjsTemplateId: "template_blvzzrs",
+  formspreeUrl: "https://formspree.io/f/mlgzyywb",
 };
 
 export const NAV_LINKS = [

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import emailjs from "@emailjs/browser";
 import { SITE, SOCIAL_LINKS } from "@/lib/constants";
 
 const GitHubIcon = () => (
@@ -51,22 +50,19 @@ export default function ContactForm() {
     setFeedback(null);
 
     try {
-      await emailjs.sendForm(
-        SITE.emailjsServiceId,
-        SITE.emailjsTemplateId,
-        formRef.current,
-        SITE.emailjsPublicKey
-      );
-      setFeedback({
-        type: "success",
-        message: "Message sent successfully!",
+      const res = await fetch(SITE.formspreeUrl, {
+        method: "POST",
+        body: new FormData(formRef.current),
+        headers: { Accept: "application/json" },
       });
-      formRef.current.reset();
+      if (res.ok) {
+        setFeedback({ type: "success", message: "Message sent successfully!" });
+        formRef.current.reset();
+      } else {
+        setFeedback({ type: "error", message: "Failed to send message. Please try again." });
+      }
     } catch {
-      setFeedback({
-        type: "error",
-        message: "Failed to send message. Please try again.",
-      });
+      setFeedback({ type: "error", message: "Failed to send message. Please try again." });
     } finally {
       setSending(false);
     }
