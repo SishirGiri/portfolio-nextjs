@@ -34,9 +34,9 @@ export default function Footer() {
   };
 
   const socialLinks = [
-    { icon: Github, href: 'https://github.com/Sishir-giri', label: 'GitHub' },
+    { icon: Github, href: 'https://github.com/SishirGiri', label: 'GitHub' },
     { icon: Linkedin, href: 'https://www.linkedin.com/in/sishir-giri-b620202a4/', label: 'LinkedIn' },
-    { icon: Mail, href: 'mailto:contact@neurobot.ai', label: 'Email' },
+    { icon: Mail, href: 'mailto:girisishir4@gmail.com', label: 'Email' },
   ];
 
   return (
