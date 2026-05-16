@@ -15,13 +15,11 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Sishir Bharati \u2014 Developer & AI Enthusiast",
-  description:
-    "Personal portfolio of Sishir Bharati \u2013 Aspiring Developer and AI Enthusiast from Nepal.",
+  title: "NeuroBot AI - Build Smarter with AI Automation",
+  description: "AI-powered chatbot and enterprise automation platform. Build smarter with NeuroBot AI's advanced NLP processing and smart automation solutions.",
   openGraph: {
-    title: "Sishir Bharati \u2014 Developer & AI Enthusiast",
-    description:
-      "Personal portfolio of Sishir Bharati \u2013 Aspiring Developer and AI Enthusiast from Nepal.",
+    title: "NeuroBot AI - Build Smarter with AI Automation",
+    description: "AI-powered chatbot and enterprise automation platform",
     type: "website",
   },
 };
@@ -33,7 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${orbitron.variable} ${outfit.variable}`}>
-      <body>{children}</body>
+      <body className="bg-[#0B1020] text-[#E5E7EB] antialiased">
+        {children}
+      </body>
     </html>
   );
 }

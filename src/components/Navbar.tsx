@@ -1,106 +1,110 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { NAV_LINKS } from "@/lib/constants";
+import { useState, useEffect } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Menu, X, Github, Twitter, Linkedin } from 'lucide-react';
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollY } = useScroll();
+  const backgroundColor = useTransform(scrollY, [0, 100], ['transparent', 'rgba(11, 16, 32, 0.95)']);
+  const borderColor = useTransform(scrollY, [0, 100], ['transparent', 'rgba(6, 182, 212, 0.2)']);
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 50);
-
-      const sections = ["about", "projects", "skills", "contact"];
-      let active = "";
-      for (const id of sections) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= 120 && rect.bottom >= 120) active = id;
-      }
-      setActiveSection(active);
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (menuOpen) {
-      document.body.classList.add("nav-open");
-    } else {
-      document.body.classList.remove("nav-open");
-    }
-    return () => document.body.classList.remove("nav-open");
-  }, [menuOpen]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeMenu();
-    };
-    if (menuOpen) {
-      document.addEventListener("keydown", onKey);
-      return () => document.removeEventListener("keydown", onKey);
-    }
-  }, [menuOpen, closeMenu]);
-
-  const handleNavClick = (href: string) => {
-    closeMenu();
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const navLinks = [
+    { name: 'Features', href: '#features' },
+    { name: 'Services', href: '#services' },
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'Testimonials', href: '#testimonials' },
+    { name: 'FAQ', href: '#faq' },
+  ];
 
   return (
-    <nav className={`navbar${scrolled ? " scrolled" : ""}`}>
-      <div className="nav-inner">
-        <a
-          href="#hero"
-          className="nav-logo"
-          onClick={(e) => {
-            e.preventDefault();
-            handleNavClick("#hero");
-          }}
-        >
-          <span className="logo-bracket">[</span>SB
-          <span className="logo-bracket">]</span>
-        </a>
+    <motion.nav
+      style={{ backgroundColor, borderColor }}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex-shrink-0"
+          >
+            <a href="#" className="flex items-center space-x-2">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#06B6D4] to-[#8B5CF6] flex items-center justify-center">
+                <span className="text-white font-bold text-xl">N</span>
+              </div>
+              <span className="text-2xl font-bold gradient-text">NeuroBot AI</span>
+            </a>
+          </motion.div>
 
-        <ul
-          className={`nav-links${menuOpen ? " open" : ""}`}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeMenu();
-          }}
-        >
-          {NAV_LINKS.map((link) => (
-            <li key={link.section}>
-              <a
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navLinks.map((link, index) => (
+              <motion.a
+                key={link.name}
                 href={link.href}
-                className={`nav-link${activeSection === link.section ? " active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(link.href);
-                }}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="text-[#E5E7EB] hover:text-[#06B6D4] transition-colors duration-300 font-medium"
               >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+                {link.name}
+              </motion.a>
+            ))}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="px-6 py-2.5 bg-gradient-to-r from-[#06B6D4] to-[#8B5CF6] rounded-lg font-semibold hover:shadow-lg hover:shadow-cyan-500/50 transition-all duration-300"
+            >
+              Get Started
+            </motion.button>
+          </div>
 
-        <button
-          className={`hamburger${menuOpen ? " open" : ""}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle navigation"
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-[#E5E7EB]"
+          >
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="md:hidden glass-strong border-t border-[#06B6D4]/20"
+        >
+          <div className="px-4 py-6 space-y-4">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-[#E5E7EB] hover:text-[#06B6D4] transition-colors duration-300 font-medium text-lg"
+              >
+                {link.name}
+              </a>
+            ))}
+            <button className="w-full px-6 py-3 bg-gradient-to-r from-[#06B6D4] to-[#8B5CF6] rounded-lg font-semibold">
+              Get Started
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </motion.nav>
   );
 }

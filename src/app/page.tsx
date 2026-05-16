@@ -1,31 +1,27 @@
-"use client";
+'use client';
 
-import dynamic from "next/dynamic";
-import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/Hero/HeroSection";
-import AboutSection from "@/components/About/AboutSection";
-import ProjectsSection from "@/components/Projects/ProjectsSection";
-import SkillsSection from "@/components/Skills/SkillsSection";
-import ContactSection from "@/components/Contact/ContactSection";
-import Footer from "@/components/Footer";
-
-const CustomCursor = dynamic(() => import("@/components/CustomCursor"), {
-  ssr: false,
-});
+import Navbar from '@/components/Navbar';
+import HeroSection from '@/components/HeroSection';
+import FeaturesSection from '@/components/FeaturesSection';
+import DashboardShowcase from '@/components/DashboardShowcase';
+import ServicesSection from '@/components/ServicesSection';
+import PricingSection from '@/components/PricingSection';
+import TestimonialsSection from '@/components/TestimonialsSection';
+import FAQSection from '@/components/FAQSection';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <>
-      <CustomCursor />
+    <main className="min-h-screen">
       <Navbar />
-      <main>
-        <HeroSection />
-        <AboutSection />
-        <ProjectsSection />
-        <SkillsSection />
-        <ContactSection />
-      </main>
+      <HeroSection />
+      <FeaturesSection />
+      <DashboardShowcase />
+      <ServicesSection />
+      <PricingSection />
+      <TestimonialsSection />
+      <FAQSection />
       <Footer />
-    </>
+    </main>
   );
 }
