@@ -22,12 +22,12 @@ export const TYPEWRITER_PHRASES = [
 export const SOCIAL_LINKS = [
   {
     label: "GitHub",
-    href: "https://github.com/",
+    href: "https://github.com/SishirGiri",
     icon: "github",
   },
   {
     label: "LinkedIn",
-    href: "https://linkedin.com/",
+    href: "https://www.linkedin.com/in/sishir-giri-b620202a4/",
     icon: "linkedin",
   },
   {
