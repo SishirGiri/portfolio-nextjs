@@ -1,27 +1,27 @@
 'use client';
 
+import CustomCursor from '@/components/CustomCursor';
 import Navbar from '@/components/Navbar';
-import HeroSection from '@/components/HeroSection';
-import FeaturesSection from '@/components/FeaturesSection';
-import DashboardShowcase from '@/components/DashboardShowcase';
-import ServicesSection from '@/components/ServicesSection';
-import PricingSection from '@/components/PricingSection';
-import TestimonialsSection from '@/components/TestimonialsSection';
-import FAQSection from '@/components/FAQSection';
+import HeroSection from '@/components/Hero/HeroSection';
+import AboutSection from '@/components/About/AboutSection';
+import ProjectsSection from '@/components/Projects/ProjectsSection';
+import SkillsSection from '@/components/Skills/SkillsSection';
+import ContactSection from '@/components/Contact/ContactSection';
 import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <>
+      <CustomCursor />
       <Navbar />
-      <HeroSection />
-      <FeaturesSection />
-      <DashboardShowcase />
-      <ServicesSection />
-      <PricingSection />
-      <TestimonialsSection />
-      <FAQSection />
+      <main>
+        <HeroSection />
+        <AboutSection />
+        <ProjectsSection />
+        <SkillsSection />
+        <ContactSection />
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }

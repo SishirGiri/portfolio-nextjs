@@ -3,23 +3,23 @@ import { Orbitron, Outfit } from "next/font/google";
 import "./globals.css";
 
 const orbitron = Orbitron({
-  variable: "--font-orbitron",
+  variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "600", "700", "900"],
 });
 
 const outfit = Outfit({
-  variable: "--font-outfit",
+  variable: "--font-body",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "NeuroBot AI - Build Smarter with AI Automation",
-  description: "AI-powered chatbot and enterprise automation platform. Build smarter with NeuroBot AI's advanced NLP processing and smart automation solutions.",
+  title: "Sishir Bharati — Developer & AI Enthusiast",
+  description: "Personal portfolio of Sishir Bharati – Aspiring Developer and AI Enthusiast from Nepal.",
   openGraph: {
-    title: "NeuroBot AI - Build Smarter with AI Automation",
-    description: "AI-powered chatbot and enterprise automation platform",
+    title: "Sishir Bharati — Developer & AI Enthusiast",
+    description: "Personal portfolio of Sishir Bharati – Aspiring Developer and AI Enthusiast from Nepal.",
     type: "website",
   },
 };
@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${orbitron.variable} ${outfit.variable}`}>
-      <body className="bg-[#0B1020] text-[#E5E7EB] antialiased">
+      <body className="bg-[#050810] text-[#e2e8f0] antialiased">
         {children}
       </body>
     </html>
