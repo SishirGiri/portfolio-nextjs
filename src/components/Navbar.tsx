@@ -47,8 +47,8 @@ export default function Navbar() {
             <span className="logo-bracket">[</span>SB<span className="logo-bracket">]</span>
           </a>
 
-          {/* Desktop Navigation */}
-          <ul className="nav-links">
+          {/* Desktop Navigation - Hidden on mobile */}
+          <ul className="nav-links desktop-nav">
             {navLinks.map((link) => (
               <li key={link.name}>
                 <a
@@ -62,7 +62,7 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Hidden on desktop */}
           <button
             className="hamburger"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -75,20 +75,22 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
-      <ul className={`nav-links ${isMobileMenuOpen ? 'open' : ''}`}>
-        {navLinks.map((link) => (
-          <li key={link.name}>
-            <a
-              href={link.href}
-              className="nav-link"
-              onClick={(e) => handleNavClick(e, link.href)}
-            >
-              {link.name}
-            </a>
-          </li>
-        ))}
-      </ul>
+      {/* Mobile Menu Overlay - Only shown when open */}
+      <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+        <ul className="mobile-nav-links">
+          {navLinks.map((link) => (
+            <li key={link.name}>
+              <a
+                href={link.href}
+                className="nav-link"
+                onClick={(e) => handleNavClick(e, link.href)}
+              >
+                {link.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </>
   );
 }
