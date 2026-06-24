@@ -14,6 +14,10 @@ export interface Project {
   features: { title: string; desc: string; icon: string }[];
   techStack: { name: string; icon: string }[];
   previewDescription: string;
+  featured?: boolean;
+  thumbnailUrl?: string;
+  websiteUrl?: string;
+  techBadges?: string[];
 }
 
 export const projects: Project[] = [
@@ -220,6 +224,94 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The portfolio opens with a full-screen particle nebula that responds to scroll position. As users navigate, sections reveal with staggered animations while 3D backgrounds maintain ambient motion throughout. The custom cursor, glowing UI elements, and smooth transitions create a cohesive futuristic experience.",
+  },
+  {
+    slug: "personal-portfolio-website",
+    icon: "\uD83C\uDFA8",
+    accentClass: "p7",
+    accentColor: "#7c3aed",
+    tags: ["Portfolio", "UI/UX", "Frontend", "Responsive"],
+    title: "Personal Portfolio Website",
+    description:
+      "A modern personal portfolio website showcasing professional experience, UI/UX design projects, frontend development skills, and featured works. Includes responsive layouts, smooth animations, and a clean user-focused interface.",
+    tech: "HTML \u00b7 CSS \u00b7 JavaScript",
+    demoUrl: "https://master-roan-tau.vercel.app/",
+    githubUrl: "#",
+    heroSubtitle: "Modern Designer Portfolio",
+    overview:
+      "A modern personal portfolio website built to showcase professional experience, UI/UX design projects, frontend development skills, and featured works. The site features fully responsive layouts that adapt seamlessly across desktop, tablet, and mobile devices, smooth scroll-driven animations, and a clean user-focused interface designed to highlight both creative and technical expertise. Every section is crafted to present skills, projects, and contact information in an engaging, accessible way.",
+    features: [
+      { title: "Responsive Layouts", desc: "Fluid, mobile-first layouts that adapt cleanly across desktop, tablet, and mobile breakpoints without breaking structure.", icon: "\uD83D\uDCF1" },
+      { title: "Smooth Animations", desc: "Scroll-reveal transitions, hover micro-interactions, and motion that guides attention without overwhelming the user.", icon: "\u2728" },
+      { title: "UI/UX Showcase", desc: "Dedicated sections highlighting design projects, case studies, and the creative process behind each piece of work.", icon: "\uD83C\uDFA8" },
+      { title: "Clean Interface", desc: "A focused, user-centered design system with consistent spacing, typography, and a clear visual hierarchy.", icon: "\uD83E\uDDE9" },
+      { title: "Featured Works", desc: "Highlighted project gallery with categorized tags, descriptions, and direct links to live demos.", icon: "\u2B50" },
+      { title: "Contact Ready", desc: "Integrated contact section and social links making it easy for visitors to reach out.", icon: "\uD83D\uDCE7" },
+    ],
+    techStack: [
+      { name: "HTML", icon: "\uD83D\uDCD8" },
+      { name: "CSS", icon: "\uD83C\uDFA8" },
+      { name: "JavaScript", icon: "\u26A1" },
+      { name: "UI/UX Design", icon: "\uD83D\uDD8D\uFE0F" },
+      { name: "Responsive Design", icon: "\uD83D\uDCF1" },
+    ],
+    previewDescription:
+      "The portfolio presents a clean, modern interface with a hero introduction, a categorized projects gallery, a skills overview, and a contact section. Smooth animations and a refined dark aesthetic keep the focus on the work.",
+    featured: true,
+  },
+  {
+    slug: "share-master",
+    icon: "\uD83D\uDCB9",
+    accentClass: "p8",
+    accentColor: "#10b981",
+    tags: ["FinTech", "Stock Market", "Analytics"],
+    title: "Share Master",
+    description:
+      "Smart NEPSE stock market intelligence platform for Nepalese investors \u2014 real-time market data, advanced candlestick charts, technical pattern detection, IPO/SEBON tracking, and AI-powered market insights in an institutional-grade trading dashboard.",
+    tech: "React \u00b7 TypeScript \u00b7 TradingView \u00b7 REST API",
+    demoUrl: "https://master-roan-tau.vercel.app/",
+    websiteUrl: "https://master-roan-tau.vercel.app/",
+    thumbnailUrl: "/images/share-master-dashboard.svg",
+    techBadges: [
+      "React",
+      "TypeScript",
+      "TradingView Charts",
+      "REST API",
+      "Tailwind CSS",
+      "Node.js",
+      "PostgreSQL",
+      "Real-time Market Data",
+    ],
+    githubUrl: "#",
+    heroSubtitle: "Smart NEPSE Stock Market Intelligence Platform",
+    overview:
+      "Share Master is a modern fintech platform built for Nepalese investors and traders. It provides real-time NEPSE market data, advanced candlestick charting, sector analysis, stock screening, IPO and SEBON tracking, technical pattern detection, and AI-powered market insights. The platform helps users monitor market trends, analyze stocks, and make data-driven investment decisions through an institutional-grade trading dashboard with a responsive dark-mode user interface.",
+    features: [
+      { title: "Real-Time NEPSE Dashboard", desc: "Live market overview with up-to-the-minute index values, top gainers/losers, and overall market status.", icon: "\uD83D\uDCC8" },
+      { title: "Live Stock Prices & Turnover", desc: "Track live stock prices and daily market turnover with auto-refreshing data feeds.", icon: "\uD83D\uDCB9" },
+      { title: "Advanced Candlestick Charts", desc: "TradingView-powered candlestick charting with multiple timeframes, indicators, and drawing tools.", icon: "\uD83D\uDCC9" },
+      { title: "Sector Performance Analysis", desc: "Sector-wise breakdowns showing which industries are driving or dragging the market.", icon: "\uD83C\uDFD9\uFE0F" },
+      { title: "Technical Pattern Detection", desc: "Automatic detection of bullish and bearish chart patterns to surface potential trade setups.", icon: "\uD83D\uDD0D" },
+      { title: "IPO & SEBON Dashboard", desc: "Track upcoming initial public offerings and SEBON public issues in one centralized view.", icon: "\uD83D\uDCB2" },
+      { title: "Live Market Feed & News", desc: "Real-time market feed and news updates to stay informed on the latest movements.", icon: "\uD83D\uDCF0" },
+      { title: "Stock Screener & Watchlist", desc: "Powerful screening filters and customizable watchlists to monitor your preferred stocks.", icon: "\uD83D\uDCD6" },
+      { title: "Historical Data Visualization", desc: "Visualize historical market and stock data to identify long-term trends and patterns.", icon: "\uD83D\uDCCA" },
+      { title: "Responsive Dark UI", desc: "A polished, responsive dark-mode interface optimized for desktop and mobile trading.", icon: "\uD83C\uDF19" },
+    ],
+    techStack: [
+      { name: "React", icon: "\u269B\uFE0F" },
+      { name: "TypeScript", icon: "\uD83D\uDDC2\uFE0F" },
+      { name: "TradingView Charts", icon: "\uD83D\uDCC8" },
+      { name: "REST API", icon: "\uD83C\uDF10" },
+      { name: "Tailwind CSS", icon: "\uD83C\uDFA8" },
+      { name: "Node.js", icon: "\uD83C\uDF95" },
+      { name: "PostgreSQL", icon: "\uD83D\uDDC4\uFE0F" },
+      { name: "Real-time Market Data", icon: "\u26A1" },
+      { name: "Vercel", icon: "\u25B2" },
+    ],
+    previewDescription:
+      "The dashboard delivers an institutional-grade trading experience: a live NEPSE overview, interactive candlestick charts, sector heatmaps, an IPO/SEBON tracker, and AI-assisted market insights \u2014 all within a fast, responsive dark interface.",
+    featured: true,
   },
 ];
 

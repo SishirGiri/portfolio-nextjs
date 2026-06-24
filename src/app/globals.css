@@ -890,6 +890,7 @@ button { cursor: pointer; font-family: inherit; }
   border-radius: inherit;
   background: linear-gradient(135deg, rgba(0, 212, 255, 0.04) 0%, transparent 60%);
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--transition);
 }
 .project-card:hover {
@@ -917,6 +918,8 @@ button { cursor: pointer; font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 2;
 }
 .card-icon-wrap {
   width: 48px; height: 48px;
@@ -935,6 +938,8 @@ button { cursor: pointer; font-family: inherit; }
 .p4 { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
 .p5 { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); }
 .p6 { background: rgba(0, 212, 255, 0.1); border-color: var(--cyan-dim); }
+.p7 { background: rgba(124, 58, 237, 0.1); border-color: var(--violet-dim); }
+.p8 { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25); }
 
 .card-links {
   display: flex;
@@ -953,6 +958,7 @@ button { cursor: pointer; font-family: inherit; }
   align-items: center;
   justify-content: center;
   color: var(--text-dim);
+  cursor: pointer;
   transition: color var(--transition), border-color var(--transition), background var(--transition);
 }
 .icon-btn svg { width: 16px; height: 16px; }
@@ -994,6 +1000,8 @@ button { cursor: pointer; font-family: inherit; }
   justify-content: space-between;
   padding-top: 16px;
   border-top: 1px solid var(--border-2);
+  position: relative;
+  z-index: 2;
 }
 .card-tech {
   font-size: 0.7rem;
@@ -1007,12 +1015,126 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 600;
   color: var(--cyan);
   letter-spacing: 0.05em;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
   transition: letter-spacing var(--transition), text-shadow var(--transition);
 }
 .card-cta:hover {
   letter-spacing: 0.15em;
   text-shadow: 0 0 10px var(--cyan);
 }
+
+/* Featured project card */
+.project-card.featured {
+  border-color: rgba(0, 212, 255, 0.35);
+  box-shadow: 0 0 0 1px var(--cyan-dim), 0 10px 40px rgba(0, 212, 255, 0.08);
+}
+.project-card.featured:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--cyan-mid), var(--glow-cyan);
+}
+.featured-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: var(--cyan-dim);
+  border: 1px solid var(--cyan-mid);
+  border-radius: 100px;
+  padding: 3px 10px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Project thumbnail image */
+.card-thumbnail {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 600 / 340;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+}
+.card-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+.project-card:hover .card-thumbnail-img { transform: scale(1.05); }
+.card-thumb-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 2px 8px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Technology badges */
+.card-tech-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.card-tech-badges span {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 0.64rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: #34d399;
+  letter-spacing: 0.02em;
+}
+
+/* Live website URL section */
+.card-live-url {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 8px 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.card-live-url svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--cyan);
+}
+.card-live-url a {
+  font-size: 0.72rem;
+  font-family: var(--font-display);
+  color: var(--text-dim);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition);
+}
+.card-live-url a:hover { color: var(--cyan); }
 
 /* ══════════════════════════════════════
    SKILLS SECTION

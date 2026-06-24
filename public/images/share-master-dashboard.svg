@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340" role="img" aria-label="Share Master NEPSE trading dashboard">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1428"/>
+      <stop offset="0.55" stop-color="#0c1a33"/>
+      <stop offset="1" stop-color="#120a26"/>
+    </linearGradient>
+    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10b981" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#10b981" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#00d4ff"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="340" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid -->
+  <g stroke="#1e293b" stroke-width="1" opacity="0.5">
+    <line x1="0" y1="80" x2="600" y2="80"/>
+    <line x1="0" y1="130" x2="600" y2="130"/>
+    <line x1="0" y1="180" x2="600" y2="180"/>
+    <line x1="0" y1="230" x2="600" y2="230"/>
+  </g>
+
+  <!-- Top bar -->
+  <g font-family="'Segoe UI',Roboto,system-ui,sans-serif">
+    <!-- Logo dot -->
+    <circle cx="26" cy="30" r="7" fill="#10b981"/>
+    <circle cx="26" cy="30" r="7" fill="none" stroke="#10b981" stroke-opacity="0.4" stroke-width="4" filter="url(#glow)"/>
+    <text x="42" y="35" fill="#e2e8f0" font-size="13" font-weight="700" letter-spacing="1.2">SHARE MASTER</text>
+    <text x="160" y="35" fill="#64748b" font-size="10" font-weight="600" letter-spacing="0.6">NEPSE</text>
+
+    <!-- Index value block -->
+    <text x="470" y="24" fill="#64748b" font-size="8.5" font-weight="600" letter-spacing="0.8">NEPSE INDEX</text>
+    <text x="470" y="40" fill="#e2e8f0" font-size="14" font-weight="700">2,184.50</text>
+    <rect x="546" y="29" width="42" height="15" rx="3" fill="#10b981" fill-opacity="0.15"/>
+    <text x="567" y="40" fill="#10b981" font-size="9" font-weight="700" text-anchor="middle">+0.57%</text>
+  </g>
+
+  <line x1="0" y1="54" x2="600" y2="54" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- KPI mini cards -->
+  <g font-family="'Segoe UI',Roboto,system-ui,sans-serif">
+    <g transform="translate(20,68)">
+      <rect width="120" height="44" rx="8" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="17" fill="#64748b" font-size="8.5" font-weight="600" letter-spacing="0.5">TURNOVER</text>
+      <text x="10" y="34" fill="#e2e8f0" font-size="12" font-weight="700">रू 3.24 Ar</text>
+      <text x="108" y="17" fill="#10b981" font-size="8" font-weight="700" text-anchor="end">▲</text>
+    </g>
+    <g transform="translate(150,68)">
+      <rect width="120" height="44" rx="8" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="17" fill="#64748b" font-size="8.5" font-weight="600" letter-spacing="0.5">ADVANCERS</text>
+      <text x="10" y="34" fill="#10b981" font-size="12" font-weight="700">142</text>
+      <text x="108" y="34" fill="#64748b" font-size="9" text-anchor="end">/ 87</text>
+    </g>
+    <g transform="translate(280,68)">
+      <rect width="120" height="44" rx="8" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="17" fill="#64748b" font-size="8.5" font-weight="600" letter-spacing="0.5">TOP GAINER</text>
+      <text x="10" y="34" fill="#e2e8f0" font-size="12" font-weight="700">NMB</text>
+      <text x="108" y="34" fill="#10b981" font-size="9.5" font-weight="700" text-anchor="end">+9.98%</text>
+    </g>
+  </g>
+
+  <!-- Chart panel -->
+  <g transform="translate(20,128)">
+    <rect width="560" height="158" rx="10" fill="#0a1830" stroke="#16233f"/>
+    <text x="14" y="22" fill="#94a3b8" font-size="9.5" font-weight="700" letter-spacing="0.8" font-family="'Segoe UI',Roboto,system-ui,sans-serif">NEPSE · 1D · CANDLESTICK</text>
+
+    <!-- Candlesticks -->
+    <g>
+      <!-- candle 1 green -->
+      <line x1="40" y1="70" x2="40" y2="120" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="35" y="82" width="10" height="26" rx="1.5" fill="#10b981"/>
+      <!-- candle 2 red -->
+      <line x1="68" y1="64" x2="68" y2="104" stroke="#f472b6" stroke-width="1.5"/>
+      <rect x="63" y="74" width="10" height="22" rx="1.5" fill="#f472b6"/>
+      <!-- candle 3 green -->
+      <line x1="96" y1="78" x2="96" y2="118" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="91" y="88" width="10" height="20" rx="1.5" fill="#10b981"/>
+      <!-- candle 4 green -->
+      <line x1="124" y1="68" x2="124" y2="100" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="119" y="74" width="10" height="18" rx="1.5" fill="#10b981"/>
+      <!-- candle 5 red -->
+      <line x1="152" y1="60" x2="152" y2="92" stroke="#f472b6" stroke-width="1.5"/>
+      <rect x="147" y="68" width="10" height="16" rx="1.5" fill="#f472b6"/>
+      <!-- candle 6 green -->
+      <line x1="180" y1="72" x2="180" y2="110" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="175" y="80" width="10" height="22" rx="1.5" fill="#10b981"/>
+      <!-- candle 7 green -->
+      <line x1="208" y1="62" x2="208" y2="96" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="203" y="68" width="10" height="20" rx="1.5" fill="#10b981"/>
+      <!-- candle 8 red -->
+      <line x1="236" y1="56" x2="236" y2="86" stroke="#f472b6" stroke-width="1.5"/>
+      <rect x="231" y="62" width="10" height="14" rx="1.5" fill="#f472b6"/>
+      <!-- candle 9 green tall -->
+      <line x1="264" y1="66" x2="264" y2="112" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="259" y="74" width="10" height="30" rx="1.5" fill="#10b981"/>
+      <!-- candle 10 green -->
+      <line x1="292" y1="54" x2="292" y2="92" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="287" y="60" width="10" height="24" rx="1.5" fill="#10b981"/>
+      <!-- candle 11 red -->
+      <line x1="320" y1="48" x2="320" y2="76" stroke="#f472b6" stroke-width="1.5"/>
+      <rect x="315" y="54" width="10" height="16" rx="1.5" fill="#f472b6"/>
+      <!-- candle 12 green -->
+      <line x1="348" y1="58" x2="348" y2="98" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="343" y="64" width="10" height="26" rx="1.5" fill="#10b981"/>
+      <!-- candle 13 green -->
+      <line x1="376" y1="46" x2="376" y2="82" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="371" y="52" width="10" height="22" rx="1.5" fill="#10b981"/>
+      <!-- candle 14 green -->
+      <line x1="404" y1="40" x2="404" y2="72" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="399" y="44" width="10" height="20" rx="1.5" fill="#10b981"/>
+      <!-- candle 15 red -->
+      <line x1="432" y1="34" x2="432" y2="62" stroke="#f472b6" stroke-width="1.5"/>
+      <rect x="427" y="40" width="10" height="14" rx="1.5" fill="#f472b6"/>
+      <!-- candle 16 green -->
+      <line x1="460" y1="42" x2="460" y2="80" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="455" y="48" width="10" height="24" rx="1.5" fill="#10b981"/>
+      <!-- candle 17 green tall breakout -->
+      <line x1="488" y1="32" x2="488" y2="76" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="483" y="38" width="10" height="30" rx="1.5" fill="#10b981"/>
+      <!-- candle 18 green -->
+      <line x1="516" y1="28" x2="516" y2="60" stroke="#10b981" stroke-width="1.5"/>
+      <rect x="511" y="32" width="10" height="22" rx="1.5" fill="#10b981"/>
+    </g>
+
+    <!-- Moving average line -->
+    <polyline points="40,98 96,94 152,86 208,82 264,84 320,72 376,64 432,56 488,52 516,42"
+      fill="none" stroke="url(#lineGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" filter="url(#glow)"/>
+  </g>
+
+  <!-- Bottom watchlist strip -->
+  <g transform="translate(20,298)" font-family="'Segoe UI',Roboto,system-ui,sans-serif">
+    <g>
+      <rect width="108" height="30" rx="7" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="19" fill="#e2e8f0" font-size="10" font-weight="700">NABIL</text>
+      <text x="98" y="19" fill="#10b981" font-size="9" font-weight="700" text-anchor="end">+3.21%</text>
+    </g>
+    <g transform="translate(116,0)">
+      <rect width="108" height="30" rx="7" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="19" fill="#e2e8f0" font-size="10" font-weight="700">NICAsia</text>
+      <text x="98" y="19" fill="#f472b6" font-size="9" font-weight="700" text-anchor="end">-1.05%</text>
+    </g>
+    <g transform="translate(232,0)">
+      <rect width="108" height="30" rx="7" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="19" fill="#e2e8f0" font-size="10" font-weight="700">HBL</text>
+      <text x="98" y="19" fill="#10b981" font-size="9" font-weight="700" text-anchor="end">+2.74%</text>
+    </g>
+    <g transform="translate(348,0)">
+      <rect width="108" height="30" rx="7" fill="#0f1d38" stroke="#1e293b"/>
+      <text x="10" y="19" fill="#e2e8f0" font-size="10" font-weight="700">GBIME</text>
+      <text x="98" y="19" fill="#10b981" font-size="9" font-weight="700" text-anchor="end">+5.12%</text>
+    </g>
+  </g>
+</svg>
