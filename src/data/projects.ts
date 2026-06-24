@@ -235,7 +235,8 @@ export const projects: Project[] = [
     description:
       "Smart NEPSE stock market intelligence platform for Nepalese investors \u2014 real-time market data, advanced candlestick charts, technical pattern detection, IPO/SEBON tracking, and AI-powered market insights in an institutional-grade trading dashboard.",
     tech: "React \u00b7 TypeScript \u00b7 TradingView \u00b7 REST API",
-    demoUrl: "#",
+    demoUrl: "https://master-roan-tau.vercel.app/",
+    websiteUrl: "https://master-roan-tau.vercel.app/",
     thumbnailUrl: "/images/share-master-dashboard.svg",
     techBadges: [
       "React",
