@@ -1,0 +1,358 @@
+/* ============================================================
+   Terminal RPG -- style.css
+   A CRT terminal aesthetic: dark base, glowing green/cyan
+   text, scanlines, vignette, blinking cursor.
+   ============================================================ */
+
+/* ---------- Design tokens ---------- */
+:root {
+  --bg-deep:   #050810;   /* deepest background      */
+  --bg:        #0a0f1c;   /* panel background        */
+  --bg-soft:   #0d1426;   /* hover / sub-panel       */
+  --line:      #14324a;   /* hairline borders        */
+  --green:     #33ff66;   /* primary phosphor green  */
+  --green-dim: #1f8a39;
+  --cyan:      #4cf2ff;   /* accent / headers        */
+  --cyan-dim:  #1f8a96;
+  --amber:     #ffcf4d;   /* loot / gold             */
+  --red:       #ff4d5e;   /* damage / danger         */
+  --magenta:   #ff7df5;   /* npc / special           */
+  --text:      #b9ffd2;   /* default body text       */
+  --text-dim:  #5d8a72;
+  --glow:      0 0 6px rgba(51,255,102,.55), 0 0 14px rgba(51,255,102,.25);
+  --glow-cyan: 0 0 6px rgba(76,242,255,.55), 0 0 14px rgba(76,242,255,.25);
+  --mono:      "Share Tech Mono", "VT323", "Consolas", "Courier New", monospace;
+  --mono-big:  "VT323", "Share Tech Mono", "Consolas", monospace;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  /* subtle background grid */
+  background-image:
+    radial-gradient(circle at 50% -10%, rgba(76,242,255,.08), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(51,255,102,.06), transparent 50%),
+    linear-gradient(transparent 95%, rgba(51,255,102,.04) 95%);
+  background-size: auto, auto, 100% 3px;
+}
+
+/* ---------- CRT overlays (scanlines + vignette + flicker) ---------- */
+.crt {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,.25) 3px,
+    rgba(0,0,0,.25) 4px
+  );
+  mix-blend-mode: multiply;
+  opacity: .55;
+}
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0,0,0,.55) 100%
+  );
+  box-shadow: inset 0 0 120px rgba(0,0,0,.8);
+}
+.flicker {
+  position: absolute;
+  inset: 0;
+  background: rgba(76,242,255,.025);
+  animation: flicker 4.5s infinite steps(60);
+}
+@keyframes flicker {
+  0%, 100% { opacity: .9; }
+  48%      { opacity: .9; }
+  49%      { opacity: .5; }
+  50%      { opacity: .95; }
+  51%      { opacity: .6; }
+  52%      { opacity: .9; }
+}
+
+/* ---------- App layout ---------- */
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 16px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100vh;
+}
+
+/* ---------- Title header ---------- */
+.title-bar { text-align: center; }
+.title {
+  font-family: var(--mono-big);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  margin: 0;
+  letter-spacing: 3px;
+  color: var(--green);
+  text-shadow: var(--glow);
+  line-height: 1;
+}
+.title .bracket { color: var(--cyan); text-shadow: var(--glow-cyan); }
+.subtitle {
+  margin: 6px 0 12px;
+  color: var(--text-dim);
+  font-size: .9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar { display: inline-flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tb-btn {
+  font-family: var(--mono);
+  font-size: .82rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: transparent;
+  border: 1px solid var(--cyan-dim);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all .15s ease;
+  text-shadow: var(--glow-cyan);
+}
+.tb-btn:hover  { background: rgba(76,242,255,.12); box-shadow: var(--glow-cyan); }
+.tb-btn:active { transform: translateY(1px); }
+.tb-btn:focus-visible { outline: 1px dashed var(--cyan); outline-offset: 2px; }
+
+/* ---------- Game grid (story | side) ---------- */
+.game-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 860px) {
+  .game-grid { grid-template-columns: 1fr; }
+  .side-panel { order: 2; }
+}
+
+/* ---------- Panels (shared) ---------- */
+.panel {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,.6);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.panel-header {
+  font-size: .78rem;
+  letter-spacing: 2px;
+  color: var(--cyan-dim);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(76,242,255,.04);
+  text-transform: uppercase;
+}
+.panel-header.sub { border-top: 1px solid var(--line); margin-top: 4px; }
+
+/* ---------- Terminal / story panel ---------- */
+.terminal-panel { min-height: 520px; }
+.story {
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 1rem;
+  color: var(--text);
+  text-shadow: 0 0 2px rgba(51,255,102,.25);
+  min-height: 200px;
+}
+.story:focus { outline: none; }
+
+/* Story content styling (added via JS as elements) */
+.story .scene-title { color: var(--cyan); text-shadow: var(--glow-cyan); font-weight: bold; }
+.story .npc    { color: var(--magenta); }
+.story .item   { color: var(--amber); }
+.story .enemy  { color: var(--red); }
+.story .good   { color: var(--green); }
+.story .dim    { color: var(--text-dim); }
+.story p       { margin: 0 0 10px; }
+.story .hr     { color: var(--line); letter-spacing: -2px; overflow: hidden; }
+
+/* ---------- Option buttons ---------- */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 14px 12px;
+  border-top: 1px dashed var(--line);
+}
+.opt-btn {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: .92rem;
+  color: var(--green);
+  background: transparent;
+  border: 1px solid var(--green-dim);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all .12s ease;
+}
+.opt-btn:hover  { background: rgba(51,255,102,.10); box-shadow: var(--glow); border-color: var(--green); }
+.opt-btn:active { transform: translateX(2px); }
+.opt-btn .num   { color: var(--cyan); margin-right: 8px; }
+.opt-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ---------- Map ---------- */
+.map-wrap { border-top: 1px solid var(--line); }
+.map {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: .82rem;
+  line-height: 1.1;
+  color: var(--green-dim);
+  letter-spacing: 1px;
+  overflow-x: auto;
+}
+.map .here { color: var(--cyan); text-shadow: var(--glow-cyan); }
+.map .seen { color: var(--green-dim); }
+.map .wall { color: #11253a; }
+
+/* ---------- Combat log ---------- */
+.log-wrap { border-top: 1px solid var(--line); }
+.log {
+  padding: 8px 14px 12px;
+  font-size: .85rem;
+  max-height: 140px;
+  overflow-y: auto;
+  color: var(--text-dim);
+}
+.log .dmg    { color: var(--red); }
+.log .heal   { color: var(--green); }
+.log .loot   { color: var(--amber); }
+.log .level  { color: var(--cyan); }
+.log .sys    { color: var(--text-dim); }
+.log div     { margin: 1px 0; }
+
+/* ---------- Side panel: stats ---------- */
+.side-panel { min-width: 0; }
+.stats { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.stat-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  font-size: .9rem;
+  column-gap: 8px;
+}
+.stat-key { color: var(--cyan-dim); letter-spacing: 1px; }
+.stat-val { color: var(--green); text-shadow: 0 0 4px rgba(51,255,102,.35); justify-self: end; }
+.bar {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: #0a1828;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.bar-fill { height: 100%; width: 100%; transition: width .3s ease; }
+.bar-fill.hp { background: linear-gradient(90deg, var(--green-dim), var(--green)); box-shadow: var(--glow); }
+.bar-fill.xp { background: linear-gradient(90deg, var(--cyan-dim), var(--cyan)); box-shadow: var(--glow-cyan); }
+
+/* ---------- Equipped ---------- */
+.equipped { padding: 8px 12px; font-size: .85rem; }
+.equipped div { display: flex; justify-content: space-between; margin: 2px 0; }
+.eq-key { color: var(--cyan-dim); }
+
+/* ---------- Inventory ---------- */
+.inventory {
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px 14px;
+  font-size: .85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 60px;
+}
+.inventory li {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 6px;
+  border-left: 2px solid var(--green-dim);
+}
+.inventory li .iname { color: var(--green); }
+.inventory li .icnt  { color: var(--amber); }
+.inventory .empty    { color: var(--text-dim); border-left-color: var(--line); }
+
+/* ---------- Command line ---------- */
+.cmdline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.prompt {
+  color: var(--cyan);
+  text-shadow: var(--glow-cyan);
+  font-size: .9rem;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+.cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 1rem;
+  caret-color: transparent; /* we draw our own cursor */
+  text-shadow: 0 0 4px rgba(51,255,102,.4);
+}
+.cmd-input::placeholder { color: var(--text-dim); opacity: .7; }
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 1.1em;
+  background: var(--green);
+  box-shadow: var(--glow);
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--green-dim); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green); }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .flicker, .cursor { animation: none; }
+}

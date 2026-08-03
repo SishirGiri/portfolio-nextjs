@@ -1,17 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const navLinks = [
+  { name: 'About', href: '/about' },
+  { name: 'Projects', href: '/projects' },
+  { name: 'Skills', href: '/skills' },
+  { name: 'Contact', href: '/contact' },
+];
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Scroll style only matters on the home page (full-height hero). On inner
+  // pages the navbar should always read as "scrolled" so the glass background
+  // is visible against the content immediately.
+  const isHome = pathname === '/';
 
   useEffect(() => {
+    if (!isHome) {
+      setIsScrolled(true);
+      return;
+    }
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isHome]);
 
+  // Lock body scroll while the mobile overlay is open.
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -23,50 +44,44 @@ export default function Navbar() {
     };
   }, [isMobileMenuOpen]);
 
-  const navLinks = [
-    { name: 'About', href: '#about' },
-    { name: 'Projects', href: '#projects' },
-    { name: 'Skills', href: '#skills' },
-    { name: 'Contact', href: '#contact' },
-  ];
+  const closeMobile = () => setIsMobileMenuOpen(false);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsMobileMenuOpen(false);
-    }
-  };
+  const isActive = (href: string) => pathname === href;
 
   return (
     <>
-      <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
+      <nav className={`navbar ${isScrolled || !isHome ? 'scrolled' : ''}`}>
         <div className="nav-inner">
-          <a href="#hero" className="nav-logo">
+          <Link
+            href="/"
+            className={`nav-logo${isHome ? ' active' : ''}`}
+            aria-current={isHome ? 'page' : undefined}
+            onClick={closeMobile}
+          >
             <span className="logo-bracket">[</span>SB<span className="logo-bracket">]</span>
-          </a>
+          </Link>
 
           {/* Desktop Navigation - Hidden on mobile */}
           <ul className="nav-links desktop-nav">
             {navLinks.map((link) => (
               <li key={link.name}>
-                <a
+                <Link
                   href={link.href}
-                  className="nav-link"
-                  onClick={(e) => handleNavClick(e, link.href)}
+                  className={`nav-link${isActive(link.href) ? ' active' : ''}`}
+                  aria-current={isActive(link.href) ? 'page' : undefined}
                 >
                   {link.name}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
 
           {/* Mobile Menu Button - Hidden on desktop */}
           <button
-            className="hamburger"
+            className={`hamburger${isMobileMenuOpen ? ' open' : ''}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation"
+            aria-expanded={isMobileMenuOpen}
           >
             <span></span>
             <span></span>
@@ -80,13 +95,14 @@ export default function Navbar() {
         <ul className="mobile-nav-links">
           {navLinks.map((link) => (
             <li key={link.name}>
-              <a
+              <Link
                 href={link.href}
-                className="nav-link"
-                onClick={(e) => handleNavClick(e, link.href)}
+                className={`nav-link${isActive(link.href) ? ' active' : ''}`}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                onClick={closeMobile}
               >
                 {link.name}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

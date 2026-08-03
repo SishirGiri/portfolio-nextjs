@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="A polished, neon-styled Snake game built with HTML5 Canvas and vanilla JavaScript. Play Snake online with power-ups, combos, levels, and obstacles." />
+  <meta name="theme-color" content="#050810" />
+  <title>Snake Game | Neon Arcade</title>
+
+  <!-- Google Fonts: Orbitron for headings, Rajdhani for body/UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- ===================== HEADER ===================== -->
+    <header class="topbar">
+      <h1 class="logo">
+        <span class="logo-icon" aria-hidden="true">🐍</span>
+        <span class="logo-text">SNAKE</span>
+        <span class="logo-accent">NEON</span>
+      </h1>
+
+      <div class="topbar-actions">
+        <button id="sound-toggle" class="icon-btn" type="button" title="Toggle sound" aria-label="Toggle sound">
+          <span id="sound-icon" aria-hidden="true">🔊</span>
+        </button>
+        <button id="theme-toggle" class="icon-btn" type="button" title="Toggle theme" aria-label="Toggle theme">
+          <span id="theme-icon" aria-hidden="true">🌙</span>
+        </button>
+        <button id="settings-toggle" class="icon-btn" type="button" title="Settings" aria-label="Open settings">
+          <span aria-hidden="true">⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================== MAIN ===================== -->
+    <main class="layout">
+      <!-- LEFT: Game info panel -->
+      <aside class="panel info-panel" aria-label="Game information">
+        <h2 class="panel-title">Stats</h2>
+
+        <div class="stat-grid">
+          <div class="stat stat--gold">
+            <div class="stat-icon" aria-hidden="true">🏆</div>
+            <div class="stat-body">
+              <div class="stat-label">High Score</div>
+              <div class="stat-value" id="high-score">0</div>
+            </div>
+          </div>
+
+          <div class="stat stat--star">
+            <div class="stat-icon" aria-hidden="true">⭐</div>
+            <div class="stat-body">
+              <div class="stat-label">Score</div>
+              <div class="stat-value" id="score">0</div>
+            </div>
+          </div>
+
+          <div class="stat stat--rocket">
+            <div class="stat-icon" aria-hidden="true">🚀</div>
+            <div class="stat-body">
+              <div class="stat-label">Level</div>
+              <div class="stat-value" id="level">1</div>
+            </div>
+          </div>
+
+          <div class="stat stat--bolt">
+            <div class="stat-icon" aria-hidden="true">⚡</div>
+            <div class="stat-body">
+              <div class="stat-label">Speed</div>
+              <div class="stat-value" id="speed">1</div>
+            </div>
+          </div>
+
+          <div class="stat stat--game stat-grid--wide">
+            <div class="stat-icon" aria-hidden="true">🎮</div>
+            <div class="stat-body">
+              <div class="stat-label">Difficulty</div>
+              <div class="stat-value" id="difficulty-display">Medium</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="combo-meter" id="combo-meter" aria-hidden="true">
+          <div class="combo-label" id="combo-label">Combo x1</div>
+          <div class="combo-bar"><div class="combo-bar-fill" id="combo-bar-fill"></div></div>
+        </div>
+
+        <div class="legend">
+          <h3 class="legend-title">Legend</h3>
+          <ul class="legend-list">
+            <li><span class="dot dot--apple"></span> Apple <small>+10</small></li>
+            <li><span class="dot dot--gold"></span> Golden <small id="gold-points">+50</small></li>
+            <li><span class="dot dot--boost"></span> Speed Boost</li>
+            <li><span class="dot dot--slow"></span> Slow-Mo</li>
+            <li><span class="dot dot--obstacle"></span> Obstacle</li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- CENTER: Game board -->
+      <section class="board-wrap" aria-label="Snake game board">
+        <div class="board-frame" id="board-frame">
+          <canvas id="game" class="game-canvas" width="480" height="480" role="img" aria-label="Snake game canvas"></canvas>
+
+          <!-- Overlay screens -->
+          <div class="overlay" id="overlay">
+            <!-- Welcome screen -->
+            <div class="overlay-card" id="screen-welcome" data-screen="welcome">
+              <div class="overlay-emoji" aria-hidden="true">🐍</div>
+              <h2 class="overlay-title">Welcome</h2>
+              <p class="overlay-subtitle">Eat the apples, dodge the walls, chase the high score.</p>
+              <button class="btn btn--primary btn--lg" id="btn-start" type="button">Start Game</button>
+              <p class="overlay-hint">Use Arrow keys / WASD, or the on-screen pad.</p>
+            </div>
+
+            <!-- Paused screen -->
+            <div class="overlay-card overlay-card--hidden" id="screen-paused" data-screen="paused">
+              <div class="overlay-emoji" aria-hidden="true">⏸️</div>
+              <h2 class="overlay-title">Paused</h2>
+              <p class="overlay-subtitle">Take a breath.</p>
+              <div class="overlay-actions">
+                <button class="btn btn--primary" id="btn-resume" type="button">Resume</button>
+                <button class="btn btn--ghost" id="btn-quit" type="button">Quit</button>
+              </div>
+            </div>
+
+            <!-- Game Over screen -->
+            <div class="overlay-card overlay-card--hidden" id="screen-gameover" data-screen="gameover">
+              <div class="overlay-emoji" aria-hidden="true">💀</div>
+              <h2 class="overlay-title overlay-title--danger">Game Over!</h2>
+              <div class="result-row"><span>Score</span><strong id="result-score">0</strong></div>
+              <div class="result-row"><span>High Score</span><strong id="result-high">0</strong></div>
+              <div class="overlay-actions">
+                <button class="btn btn--primary" id="btn-play-again" type="button">Play Again</button>
+                <button class="btn btn--ghost" id="btn-home" type="button">Home</button>
+              </div>
+            </div>
+
+            <!-- New High Score celebration -->
+            <div class="overlay-card overlay-card--hidden" id="screen-newhigh" data-screen="newhigh">
+              <div class="overlay-emoji overlay-emoji--bounce" aria-hidden="true">🎉</div>
+              <h2 class="overlay-title overlay-title--gold">New High Score!</h2>
+              <p class="overlay-subtitle">You crushed it.</p>
+              <div class="result-row"><span>Final Score</span><strong id="newhigh-score">0</strong></div>
+              <div class="overlay-actions">
+                <button class="btn btn--primary" id="btn-newhigh-again" type="button">Play Again</button>
+                <button class="btn btn--ghost" id="btn-newhigh-home" type="button">Home</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Level-up toast -->
+          <div class="toast" id="toast" aria-live="polite"></div>
+        </div>
+
+        <!-- Desktop control buttons -->
+        <div class="game-buttons" id="game-buttons">
+          <button class="btn btn--primary" id="btn-play" type="button">Start Game</button>
+          <button class="btn btn--secondary" id="btn-pause" type="button" disabled>Pause</button>
+          <button class="btn btn--secondary" id="btn-restart" type="button">Restart</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: Mobile controls + power-up info -->
+      <aside class="panel side-panel" aria-label="Controls">
+        <h2 class="panel-title">Controls</h2>
+
+        <!-- Virtual D-pad -->
+        <div class="dpad" id="dpad" role="group" aria-label="Direction pad">
+          <button class="dpad-btn dpad-up" id="dpad-up" type="button" data-dir="up" aria-label="Up">▲</button>
+          <button class="dpad-btn dpad-left" id="dpad-left" type="button" data-dir="left" aria-label="Left">◀</button>
+          <div class="dpad-center" aria-hidden="true"></div>
+          <button class="dpad-btn dpad-right" id="dpad-right" type="button" data-dir="right" aria-label="Right">▶</button>
+          <button class="dpad-btn dpad-down" id="dpad-down" type="button" data-dir="down" aria-label="Down">▼</button>
+        </div>
+
+        <div class="active-effects" id="active-effects" aria-live="polite">
+          <div class="active-effects-title">Active Power-ups</div>
+          <ul class="effects-list" id="effects-list"></ul>
+        </div>
+
+        <div class="key-hints">
+          <div class="key-hint"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> Move</div>
+          <div class="key-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</div>
+          <div class="key-hint"><kbd>P</kbd> / <kbd>Space</kbd> Pause</div>
+          <div class="key-hint"><kbd>R</kbd> Restart</div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <p>Built with HTML5 Canvas &amp; vanilla JavaScript. No frameworks, no build step.</p>
+    </footer>
+  </div>
+
+  <!-- ===================== SETTINGS MODAL ===================== -->
+  <div class="modal" id="settings-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-backdrop" id="settings-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="settings-title">Settings</h2>
+        <button class="icon-btn" id="settings-close" type="button" aria-label="Close settings">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label class="field-label" for="set-difficulty">Difficulty</label>
+          <select class="select" id="set-difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+          <p class="field-hint">Affects starting speed and how quickly it ramps up.</p>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="set-grid">Grid Size</label>
+          <select class="select" id="set-grid">
+            <option value="15">15 × 15 — Large cells</option>
+            <option value="20" selected>20 × 20 — Classic</option>
+            <option value="25">25 × 25 — Tight</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="set-theme">Theme</label>
+          <select class="select" id="set-theme">
+            <option value="dark" selected>Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+
+        <div class="field field--row">
+          <label class="field-label" for="set-sound">Sound</label>
+          <label class="switch">
+            <input type="checkbox" id="set-sound" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="field">
+          <button class="btn btn--danger" id="btn-reset-high" type="button">Reset High Score</button>
+          <p class="field-hint">This permanently clears your saved high score.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CONFIRM MODAL ===================== -->
+  <div class="modal" id="confirm-modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="confirm-backdrop"></div>
+    <div class="modal-card modal-card--sm">
+      <div class="modal-body">
+        <h2 class="confirm-title" id="confirm-title">Are you sure?</h2>
+        <p class="confirm-text" id="confirm-text">This cannot be undone.</p>
+        <div class="confirm-actions">
+          <button class="btn btn--ghost" id="confirm-cancel" type="button">Cancel</button>
+          <button class="btn btn--danger" id="confirm-ok" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

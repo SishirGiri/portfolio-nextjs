@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Task Manager</title>
+  <meta name="description" content="Drag-and-drop task app with priority tagging, deadline tracking, and persistent local storage." />
+
+  <!-- Optional Google Fonts (allowed by spec) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Decorative animated background glows -->
+  <div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Smart Task Manager</h1>
+        <p class="brand-sub">Kanban board · priorities · deadlines · local-first</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btnImport" type="button" title="Import board from JSON file">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Import</span>
+      </button>
+      <button class="btn btn-ghost" id="btnExport" type="button" title="Export board to JSON file">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Export</span>
+      </button>
+      <button class="btn btn-primary" id="btnNewTask" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>New Task</span>
+      </button>
+      <!-- Hidden file input for import -->
+      <input type="file" id="importFile" accept="application/json,.json" hidden />
+    </div>
+  </header>
+
+  <!-- ===================== FILTERS BAR ===================== -->
+  <section class="filters" aria-label="Board filters">
+    <div class="filter-search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="searchInput" placeholder="Search title, description, or tags…" aria-label="Search tasks" />
+    </div>
+
+    <div class="filter-group">
+      <label for="priorityFilter" class="sr-only">Filter by priority</label>
+      <select id="priorityFilter" aria-label="Filter by priority">
+        <option value="all">All priorities</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+
+    <label class="toggle" title="Hide completed tasks">
+      <input type="checkbox" id="hideDone" />
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-label">Hide Done</span>
+    </label>
+
+    <div class="filter-stats" id="filterStats" aria-live="polite"></div>
+  </section>
+
+  <!-- ===================== KANBAN BOARD ===================== -->
+  <main class="board" id="board">
+    <!-- Columns are declared statically for stable layout; JS fills task lists -->
+    <section class="column" data-column="backlog" aria-label="Backlog column">
+      <div class="column-head">
+        <span class="column-dot dot-backlog"></span>
+        <h2>Backlog</h2>
+        <span class="column-count" data-count-for="backlog">0</span>
+      </div>
+      <div class="column-body" data-dropzone="backlog"></div>
+    </section>
+
+    <section class="column" data-column="in-progress" aria-label="In Progress column">
+      <div class="column-head">
+        <span class="column-dot dot-progress"></span>
+        <h2>In Progress</h2>
+        <span class="column-count" data-count-for="in-progress">0</span>
+      </div>
+      <div class="column-body" data-dropzone="in-progress"></div>
+    </section>
+
+    <section class="column" data-column="review" aria-label="Review column">
+      <div class="column-head">
+        <span class="column-dot dot-review"></span>
+        <h2>Review</h2>
+        <span class="column-count" data-count-for="review">0</span>
+      </div>
+      <div class="column-body" data-dropzone="review"></div>
+    </section>
+
+    <section class="column" data-column="done" aria-label="Done column">
+      <div class="column-head">
+        <span class="column-dot dot-done"></span>
+        <h2>Done</h2>
+        <span class="column-count" data-count-for="done">0</span>
+      </div>
+      <div class="column-body" data-dropzone="done"></div>
+    </section>
+  </main>
+
+  <!-- ===================== TASK MODAL ===================== -->
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <h3 id="modalTitle">New Task</h3>
+        <button class="icon-btn" id="modalClose" type="button" aria-label="Close dialog">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="taskForm" class="modal-form" novalidate>
+        <label class="field">
+          <span class="field-label">Title</span>
+          <input type="text" id="fTitle" maxlength="100" required placeholder="e.g. Refactor checkout flow" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Description</span>
+          <textarea id="fDescription" rows="3" maxlength="500" placeholder="Short context or acceptance criteria"></textarea>
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">Priority</span>
+            <div class="priority-picker" id="priorityPicker">
+              <button type="button" class="priority-chip chip-critical" data-priority="critical">Critical</button>
+              <button type="button" class="priority-chip chip-high" data-priority="high">High</button>
+              <button type="button" class="priority-chip chip-medium is-active" data-priority="medium">Medium</button>
+              <button type="button" class="priority-chip chip-low" data-priority="low">Low</button>
+            </div>
+            <input type="hidden" id="fPriority" value="medium" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Deadline</span>
+            <input type="date" id="fDeadline" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Tags <span class="field-hint">(comma-separated)</span></span>
+          <input type="text" id="fTags" placeholder="frontend, design, api" />
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modalSave">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== TOAST ===================== -->
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

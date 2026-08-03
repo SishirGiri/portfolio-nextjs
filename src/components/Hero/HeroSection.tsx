@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import Typewriter from "./Typewriter";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
@@ -46,18 +47,18 @@ export default function HeroSection() {
         </div>
 
         <p className="hero-sub">
-          Building intelligent systems from the foothills of Nepal. Turning
-          curiosity into code, one commit at a time.
+          Exploring technology, building meaningful solutions, and turning
+          ideas into reality through code.
         </p>
 
         <div className="hero-actions">
-          <a href="#projects" className="btn btn-primary">
+          <Link href="/projects" className="btn btn-primary">
             <span className="btn-text">View My Work</span>
             <span className="btn-glow" />
-          </a>
-          <a href="#contact" className="btn btn-ghost">
+          </Link>
+          <Link href="/contact" className="btn btn-ghost">
             Get In Touch
-          </a>
+          </Link>
         </div>
 
         <div className="hero-stats">

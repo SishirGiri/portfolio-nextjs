@@ -33,6 +33,9 @@ export default function ProjectCard({
   project: (typeof projects)[0];
   index: number;
 }) {
+  const hasDemo = project.demoUrl && project.demoUrl !== "#";
+  const internalDemo = hasDemo && project.demoUrl.startsWith("/");
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -83,15 +86,22 @@ export default function ProjectCard({
           {project.icon}
         </div>
         <div className="card-links">
-          <a
-            href={project.demoUrl}
-            className="icon-btn"
-            title="View Demo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLinkIcon />
-          </a>
+          {hasDemo &&
+            (internalDemo ? (
+              <Link href={project.demoUrl} className="icon-btn" title="Live Demo">
+                <ExternalLinkIcon />
+              </Link>
+            ) : (
+              <a
+                href={project.demoUrl}
+                className="icon-btn"
+                title="Live Demo"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLinkIcon />
+              </a>
+            ))}
           <a
             href={project.githubUrl}
             className="icon-btn"

@@ -31,8 +31,8 @@ export const projects: Project[] = [
     description:
       "A rule-based intelligent chatbot using Python and pattern-matching NLP. Answers FAQs with contextual responses and learns from conversation history.",
     tech: "Python \u00b7 NLTK \u00b7 JSON",
-    demoUrl: "#",
-    githubUrl: "#",
+    demoUrl: "/demos/chatbot",
+    githubUrl: "https://github.com/YOUR_USERNAME/ai-chatbot",
     heroSubtitle: "Intelligent Conversational AI",
     overview:
       "This AI-powered chatbot leverages natural language processing techniques to understand user queries and deliver contextual, meaningful responses. Built entirely in Python, it uses NLTK for tokenization, stemming, and pattern matching against a rich knowledge base stored in JSON format. The chatbot maintains conversation history to provide contextually aware replies and continuously improves its response accuracy through interaction patterns.",
@@ -65,8 +65,8 @@ export const projects: Project[] = [
     description:
       "Interactive analytics dashboard built with vanilla JS. Features real-time SVG charts, filterable datasets, and a responsive dark-mode UI.",
     tech: "JS \u00b7 SVG \u00b7 REST API",
-    demoUrl: "#",
-    githubUrl: "#",
+    demoUrl: "/demos/dashboard",
+    githubUrl: "https://github.com/YOUR_USERNAME/live-data-dashboard",
     heroSubtitle: "Real-Time Analytics Visualization",
     overview:
       "A powerful, zero-dependency analytics dashboard built with vanilla JavaScript and dynamic SVG rendering. The dashboard fetches live data from REST APIs and renders interactive charts, graphs, and KPI cards in real-time. Designed with a dark-mode-first approach, it features smooth transitions between data states, responsive grid layouts, and an intuitive filtering system that updates all visualizations simultaneously.",
@@ -90,7 +90,7 @@ export const projects: Project[] = [
       "The dashboard presents a command-center style layout with live-updating charts, sortable data tables, and customizable widget panels. Each chart features hover tooltips, zoom controls, and export-to-PNG functionality.",
   },
   {
-    slug: "terminal-rpg-game",
+    slug: "terminal-rpg",
     icon: "\uD83C\uDFAE",
     accentClass: "p3",
     accentColor: "#7c3aed",
@@ -99,8 +99,8 @@ export const projects: Project[] = [
     description:
       "A text-based adventure game written in pure C. Features dynamic story branching, inventory management, and procedural dungeon generation.",
     tech: "C \u00b7 GCC \u00b7 ncurses",
-    demoUrl: "#",
-    githubUrl: "#",
+    demoUrl: "/demos/rpg",
+    githubUrl: "https://github.com/YOUR_USERNAME/terminal-rpg",
     heroSubtitle: "Procedural Adventure Engine",
     overview:
       "A deeply immersive text-based RPG engine written entirely in C, leveraging the ncurses library for rich terminal UI rendering. The game features a procedurally generated dungeon system using cellular automata, a turn-based combat system with dice-roll mechanics, dynamic NPC dialogue trees, and a branching narrative that adapts to player choices. Every playthrough generates unique dungeon layouts, enemy placements, and loot tables.",
@@ -133,8 +133,8 @@ export const projects: Project[] = [
     description:
       "Neural network trained on MNIST that classifies handwritten digits. Includes a canvas for real-time drawing and instant predictions.",
     tech: "Python \u00b7 TensorFlow \u00b7 Canvas",
-    demoUrl: "#",
-    githubUrl: "#",
+    demoUrl: "/demos/classifier",
+    githubUrl: "https://github.com/YOUR_USERNAME/digit-classifier",
     heroSubtitle: "Neural Network Digit Recognition",
     overview:
       "A complete machine learning pipeline for handwritten digit classification using a custom neural network built with TensorFlow and trained on the MNIST dataset. The project includes data preprocessing, model architecture design, training with validation, and an interactive web canvas where users can draw digits and receive real-time predictions. The model achieves 97.8% accuracy on the test set using a carefully tuned architecture.",
@@ -167,8 +167,8 @@ export const projects: Project[] = [
     description:
       "Drag-and-drop task app with priority tagging, deadline tracking, and persistent local storage. Zero dependencies, pure web APIs.",
     tech: "JS \u00b7 CSS Grid \u00b7 Web APIs",
-    demoUrl: "#",
-    githubUrl: "#",
+    demoUrl: "/demos/tasks",
+    githubUrl: "https://github.com/YOUR_USERNAME/smart-task-manager",
     heroSubtitle: "Intelligent Task Management",
     overview:
       "A feature-rich task management application built with zero external dependencies using only vanilla JavaScript and native Web APIs. The app implements a Kanban-style board with drag-and-drop powered by the HTML5 Drag and Drop API. Tasks are persisted in LocalStorage with automatic save-on-change, and the entire application follows a responsive, mobile-first design philosophy with offline support.",
@@ -192,7 +192,7 @@ export const projects: Project[] = [
       "The Kanban board displays four columns: Backlog, In Progress, Review, and Done. Each task card shows priority color, title, description preview, deadline countdown, and assigned tags. Dragging a card shows a ghost preview at the drop target with smooth reorder animation.",
   },
   {
-    slug: "3d-portfolio-site",
+    slug: "3d-portfolio",
     icon: "\uD83C\uDF10",
     accentClass: "p6",
     accentColor: "#00d4ff",
@@ -201,8 +201,9 @@ export const projects: Project[] = [
     description:
       "This very website \u2014 built from scratch with Three.js particle systems, WebGL shaders, scroll animations, and a custom dark futuristic UI.",
     tech: "Three.js \u00b7 GLSL \u00b7 CSS",
-    demoUrl: "#",
-    githubUrl: "#",
+    demoUrl: "/",
+    githubUrl: "https://github.com/YOUR_USERNAME/portfolio",
+    websiteUrl: "/",
     heroSubtitle: "Immersive Web Experience",
     overview:
       "A groundbreaking personal portfolio website that pushes the boundaries of web graphics using Three.js and custom WebGL shaders. The site features a real-time particle nebula system with thousands of animated points forming a cosmic backdrop, a DNA helix double-helix structure rendered with 3D geometry, and smooth scroll-driven animations that seamlessly transition between sections. Every visual element is crafted to create an immersive cyberpunk atmosphere.",
@@ -224,6 +225,43 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The portfolio opens with a full-screen particle nebula that responds to scroll position. As users navigate, sections reveal with staggered animations while 3D backgrounds maintain ambient motion throughout. The custom cursor, glowing UI elements, and smooth transitions create a cohesive futuristic experience.",
+  },
+  {
+    slug: "snake-game",
+    icon: "\uD83D\uDC0D",
+    accentClass: "p4",
+    accentColor: "#10b981",
+    tags: ["JavaScript", "Canvas", "Game"],
+    title: "Snake Neon",
+    description:
+      "A polished neon-arcade take on classic Snake \u2014 built with pure HTML5 Canvas and vanilla JS. Features glowing visuals, power-ups, combo scoring, level progression, obstacles, full mobile controls, Web Audio sound effects, and a real light/dark theme.",
+    tech: "JS \u00b7 Canvas API \u00b7 Web Audio",
+    demoUrl: "/demos/snake",
+    githubUrl: "https://github.com/YOUR_USERNAME/snake-game",
+    heroSubtitle: "Neon Arcade Snake",
+    overview:
+      "Snake Neon is a portfolio-quality mini-game built entirely with HTML5 Canvas, CSS3, and vanilla JavaScript \u2014 no frameworks, no build step, no external assets. The game engine runs on a requestAnimationFrame render loop with a tick-based grid simulation, supporting smooth continuous movement, directional queueing, and a 180\u00b0 reversal lock. Every visual is crafted for a premium neon-arcade feel: the snake glows with a cyan-green gradient and shadowBlur, food pulses, particles burst on every bite, and the board shakes on game over. Sounds are synthesized at runtime via the Web Audio API, so the whole game works fully offline.",
+    features: [
+      { title: "Classic Gameplay", desc: "Grid-based snake on Canvas with continuous movement, wall/self/obstacle collision, and a reversal lock so you can't double back into yourself.", icon: "\uD83D\uDC0D" },
+      { title: "Power-Ups", desc: "Golden food (+50 bonus, time-limited), speed-boost food, and a temporary slow-motion power-up add strategic depth beyond the basic loop.", icon: "\u26A1" },
+      { title: "Combo Scoring", desc: "Eat food quickly in succession to build a combo multiplier (up to \u00d78) with a decay bar \u2014 rewards aggressive, skilled play.", icon: "\uD83D\uDD25" },
+      { title: "Level Progression", desc: "Every 50 points raises the level, increasing speed and (from level 3) spawning obstacles. Level-up is announced with a toast and sound.", icon: "\uD83D\uDE80" },
+      { title: "Full Mobile Support", desc: "Large touch D-pad, swipe gestures on the board, and touch-action locking so the page never scrolls mid-game.", icon: "\uD83D\uDCF1" },
+      { title: "Settings & Themes", desc: "Difficulty (Easy/Medium/Hard), grid size (15/20/25), sound toggle, a real light theme, and a high-score reset \u2014 all persisted in localStorage.", icon: "\u2699\uFE0F" },
+      { title: "Game States", desc: "Polished overlay screens for Welcome, Playing, Paused, Game Over (with score breakdown), and a New High Score celebration.", icon: "\uD83C\uDFAE" },
+      { title: "Web Audio Sound", desc: "Eat, gold, boost, slow-mo, level-up, game-over, new-high, and click effects \u2014 all synthesized with oscillators, zero audio files.", icon: "\uD83D\uDD0A" },
+    ],
+    techStack: [
+      { name: "JavaScript", icon: "\u26A1" },
+      { name: "Canvas API", icon: "\uD83C\uDFA8" },
+      { name: "Web Audio", icon: "\uD83D\uDD0A" },
+      { name: "CSS3", icon: "\uD83C\uDF1F" },
+      { name: "localStorage", icon: "\uD83D\uDDC3\uFE0F" },
+      { name: "Touch API", icon: "\uD83D\uDCF1" },
+    ],
+    previewDescription:
+      "A neon-arcade Snake game rendered on HTML5 Canvas. The board shows a glowing gradient snake chasing pulsing food, with a side panel tracking score, high score, level, speed, and difficulty. Power-ups, combo multipliers, and obstacles appear as you progress, all framed in a dark glassmorphic UI with a subtle animated grid.",
+    featured: true,
   },
   {
     slug: "share-master",

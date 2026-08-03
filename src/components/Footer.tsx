@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -40,11 +42,11 @@ export default function Footer() {
           </div>
           <div className="footer-nav">
             <h4>Navigation</h4>
-            <a href="#hero">Home</a>
-            <a href="#about">About</a>
-            <a href="#projects">Projects</a>
-            <a href="#skills">Skills</a>
-            <a href="#contact">Contact</a>
+            <Link href="/">Home</Link>
+            <Link href="/about">About</Link>
+            <Link href="/projects">Projects</Link>
+            <Link href="/skills">Skills</Link>
+            <Link href="/contact">Contact</Link>
           </div>
           <div className="footer-contact-col">
             <h4>Get in Touch</h4>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chatbot · Portfolio Demo</title>
+  <meta name="description" content="A rule-based intelligent chatbot demo using pattern-matching NLP. Built with vanilla HTML, CSS and JavaScript." />
+
+  <!-- Google Fonts: optional CDN, no other dependencies -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Animated ambient background layers -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="orb orb--cyan"></div>
+    <div class="orb orb--violet"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- Main chat application card -->
+  <main class="app" role="application" aria-label="AI Chatbot demo">
+    <!-- Header -->
+    <header class="app__header">
+      <div class="app__title-wrap">
+        <div class="app__avatar" aria-hidden="true">
+          <span class="app__avatar-core"></span>
+          <span class="app__avatar-ring"></span>
+        </div>
+        <div>
+          <h1 class="app__title">AI Chatbot</h1>
+          <p class="app__subtitle">
+            <span class="status-dot" aria-hidden="true"></span>
+            Online · Rule-based NLP
+          </p>
+        </div>
+      </div>
+
+      <div class="app__header-actions">
+        <span class="badge" title="This is a portfolio demo">Demo</span>
+        <button id="clearBtn" class="icon-btn" type="button" aria-label="Clear conversation" title="Clear chat">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M9 3v1H4v2h1v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm2 5h2v10h-2V8zm-4 2h2v8H7v-8zm8 0h2v8h-2v-8z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Message list (scrollable) -->
+    <section id="messages" class="messages" aria-live="polite" aria-label="Conversation">
+      <!-- Messages are injected by script.js -->
+    </section>
+
+    <!-- Typing indicator (hidden until bot is "thinking") -->
+    <div id="typingIndicator" class="typing hidden" aria-hidden="true">
+      <div class="typing__bubble">
+        <span class="typing__dot"></span>
+        <span class="typing__dot"></span>
+        <span class="typing__dot"></span>
+      </div>
+    </div>
+
+    <!-- Quick reply suggestion chips -->
+    <div id="quickReplies" class="quick-replies" role="group" aria-label="Suggested questions">
+      <!-- Chips are injected by script.js -->
+    </div>
+
+    <!-- Composer / input area -->
+    <form id="composer" class="composer" autocomplete="off">
+      <input
+        id="userInput"
+        class="composer__input"
+        type="text"
+        placeholder="Type a message…"
+        aria-label="Type your message"
+        autocomplete="off"
+        spellcheck="true"
+      />
+      <button id="sendBtn" class="composer__send" type="submit" aria-label="Send message">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3 10l12 2-12 2z"/>
+        </svg>
+      </button>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
