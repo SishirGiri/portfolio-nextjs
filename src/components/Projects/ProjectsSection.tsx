@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { projects, featuredProject, type Project } from '@/data/projects';
-import { staggerContainer, inViewport } from '@/components/About/motion';
 import ProjectsBackground from './ProjectsBackground';
 import ProjectsHero from './ProjectsHero';
 import FilterBar from './FilterBar';
@@ -74,14 +73,7 @@ export default function ProjectsSection() {
 
           {/* §3 Project grid (animated filter transitions) */}
           <div className="proj-block" style={{ paddingTop: 24 }}>
-            <motion.div
-              className="proj-grid"
-              layout
-              variants={staggerContainer(0.06)}
-              initial="hidden"
-              whileInView="visible"
-              viewport={inViewport}
-            >
+            <motion.div className="proj-grid" layout>
               <AnimatePresence mode="popLayout">
                 {filtered.map((p) => (
                   <motion.div

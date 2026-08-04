@@ -58,9 +58,6 @@ export default function Footer() {
           <span className="footer-copy">
             © {currentYear} <strong>Sishir Bharati</strong>. All rights reserved.
           </span>
-          <span className="footer-status">
-            <span className="pulse-dot"></span> Available for work
-          </span>
           <span className="footer-tech">Built with Three.js + Next.js</span>
         </div>
       </div>

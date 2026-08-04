@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import { MapPin, Download, GraduationCap } from 'lucide-react';
+import { MapPin, Download } from 'lucide-react';
 import { scaleIn, fadeIn, inViewport } from './motion';
 import ResumeAuthModal from './ResumeAuthModal';
 
@@ -57,16 +57,9 @@ export default function AboutProfile() {
           </motion.div>
 
           <motion.div className="about-profile-meta" variants={fadeIn}>
-            <span className="about-available">
-              <span className="pulse-dot" /> Available for Opportunities
-            </span>
             <span className="about-profile-role">Computer Science Student</span>
             <span className="about-profile-loc">
               <MapPin /> Pokhara, Nepal
-            </span>
-            <span className="about-profile-loc" style={{ gap: '7px' }}>
-              <GraduationCap style={{ width: 15, height: 15, color: 'var(--cyan)' }} />
-              Aspiring Software Engineer
             </span>
 
             <motion.button

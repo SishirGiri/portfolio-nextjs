@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import PageShell from '@/components/PageShell';
 import HeroSection from '@/components/Hero/HeroSection';
+import CurrentJourney from '@/components/CurrentJourney/CurrentJourney';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 
 const exploreCards = [
@@ -40,6 +41,7 @@ export default function Home() {
   return (
     <PageShell>
       <HeroSection />
+      <CurrentJourney />
 
       <section className="explore">
         <div className="container">
