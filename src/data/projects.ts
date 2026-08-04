@@ -1,3 +1,10 @@
+export type ProjectCategory =
+  | 'Web Development'
+  | 'SEO'
+  | 'AI / Machine Learning';
+
+export type ProjectLanguage = 'JavaScript' | 'Python' | 'C Programming';
+
 export interface Project {
   slug: string;
   icon: string;
@@ -18,6 +25,14 @@ export interface Project {
   thumbnailUrl?: string;
   websiteUrl?: string;
   techBadges?: string[];
+  /* ── Card / filter metadata (added in the premium redesign) ── */
+  category: ProjectCategory;
+  language?: ProjectLanguage;
+  status: 'Completed' | 'In Progress';
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  date: string;
+  highlights?: string[];
+  isPrivate?: boolean;
 }
 
 export const projects: Project[] = [
@@ -54,6 +69,16 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The chatbot interface features a clean terminal-style design with real-time message streaming, typing indicators, and syntax-highlighted code responses. The web version includes a modern chat UI with message bubbles, timestamps, and quick-action buttons.",
+    category: "AI / Machine Learning",
+    language: "Python",
+    status: "Completed",
+    difficulty: "Intermediate",
+    date: "2024",
+    highlights: [
+      "Pattern-matching NLP with NLTK for intent recognition",
+      "JSON knowledge base with multi-topic support",
+      "Conversation memory for contextual follow-ups",
+    ],
   },
   {
     slug: "live-data-dashboard",
@@ -88,6 +113,16 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The dashboard presents a command-center style layout with live-updating charts, sortable data tables, and customizable widget panels. Each chart features hover tooltips, zoom controls, and export-to-PNG functionality.",
+    category: "Web Development",
+    language: "JavaScript",
+    status: "Completed",
+    difficulty: "Intermediate",
+    date: "2024",
+    highlights: [
+      "Zero-dependency vanilla JS with dynamic SVG charts",
+      "Live REST API integration with polling and caching",
+      "Multi-criteria filtering that updates all widgets",
+    ],
   },
   {
     slug: "terminal-rpg",
@@ -122,6 +157,16 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The game renders in a multi-panel terminal layout: a central viewport shows the dungeon map with ASCII characters, a side panel displays character stats and inventory, and a bottom panel shows the combat log and narrative text with color-coded highlights.",
+    category: "Web Development",
+    language: "C Programming",
+    status: "Completed",
+    difficulty: "Advanced",
+    date: "2024",
+    highlights: [
+      "Pure C with ncurses terminal UI",
+      "Procedural dungeons via cellular automata",
+      "Turn-based combat and branching narrative",
+    ],
   },
   {
     slug: "digit-classifier",
@@ -156,6 +201,16 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The web interface features a large drawing canvas on the left with real-time prediction results on the right. Confidence bars animate as the user draws, with the predicted digit displayed prominently. A gallery below shows recent predictions with actual vs. predicted labels.",
+    category: "AI / Machine Learning",
+    language: "Python",
+    status: "Completed",
+    difficulty: "Advanced",
+    date: "2024",
+    highlights: [
+      "Custom neural network trained on MNIST",
+      "Interactive drawing canvas with real-time prediction",
+      "Layer and activation visualizations",
+    ],
   },
   {
     slug: "smart-task-manager",
@@ -190,6 +245,16 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The Kanban board displays four columns: Backlog, In Progress, Review, and Done. Each task card shows priority color, title, description preview, deadline countdown, and assigned tags. Dragging a card shows a ghost preview at the drop target with smooth reorder animation.",
+    category: "Web Development",
+    language: "JavaScript",
+    status: "Completed",
+    difficulty: "Intermediate",
+    date: "2024",
+    highlights: [
+      "Zero-dependency vanilla JS Kanban board",
+      "Native HTML5 drag-and-drop with animations",
+      "Persistent LocalStorage with import/export",
+    ],
   },
   {
     slug: "3d-portfolio",
@@ -225,6 +290,16 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The portfolio opens with a full-screen particle nebula that responds to scroll position. As users navigate, sections reveal with staggered animations while 3D backgrounds maintain ambient motion throughout. The custom cursor, glowing UI elements, and smooth transitions create a cohesive futuristic experience.",
+    category: "Web Development",
+    language: "JavaScript",
+    status: "In Progress",
+    difficulty: "Advanced",
+    date: "2025",
+    highlights: [
+      "Three.js particle nebula with custom GLSL shaders",
+      "Scroll-driven reveal and parallax animations",
+      "Custom cyberpunk design system",
+    ],
   },
   {
     slug: "snake-game",
@@ -261,6 +336,65 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "A neon-arcade Snake game rendered on HTML5 Canvas. The board shows a glowing gradient snake chasing pulsing food, with a side panel tracking score, high score, level, speed, and difficulty. Power-ups, combo multipliers, and obstacles appear as you progress, all framed in a dark glassmorphic UI with a subtle animated grid.",
+    category: "Web Development",
+    language: "JavaScript",
+    status: "Completed",
+    difficulty: "Intermediate",
+    date: "2025",
+    highlights: [
+      "Pure Canvas + vanilla JS, zero dependencies",
+      "Power-ups, combo scoring, and level progression",
+      "Full mobile controls and synthesized Web Audio",
+    ],
+    featured: true,
+  },
+  {
+    slug: "neon-city",
+    icon: "🎯",
+    accentClass: "p7",
+    accentColor: "#3da9fc",
+    tags: ["JavaScript", "Canvas", "Game"],
+    title: "Tactical Ops",
+    description:
+      "A realistic top-down tactical shooter: a modern SWAT operator navigates a full city, takes on 7 mission types, uses 5 weapons + 3 grenades, fights intelligent enemy AI with line-of-sight and pathfinding, and drives vehicles \u2014 built with ES Modules, Canvas, and synthesized audio.",
+    tech: "JS (ES Modules) \u00b7 Canvas \u00b7 Web Audio",
+    demoUrl: "/demos/neon-city",
+    githubUrl: "https://github.com/YOUR_USERNAME/neon-city",
+    heroSubtitle: "Top-Down Tactical Shooter",
+    overview:
+      "Tactical Ops is a production-quality top-down tactical shooter built entirely with HTML5 Canvas, vanilla JavaScript (ES Modules), and CSS \u2014 no frameworks, no game engine, no external assets. The player is a modern SWAT operator deployed to an original modern city of seven districts with asphalt roads, lane markings, sidewalks, crosswalks, 2.5D buildings, and realistic environment objects (cars, trucks, containers, barriers, street/traffic lights, trees, hydrants, explosive barrels). The codebase is a clean OOP architecture across 26 modules: Player, Enemy, NPC, Vehicle, Bullet, Grenade, Particle entities; Pistol/SMG/Rifle/Shotgun/Sniper + Frag/Flash/Smoke grenades each with damage, recoil, spread, reload and penetration; an enemy AI state machine (patrol, investigate, chase, cover, flank, attack, search, flee) driven by line-of-sight raycasting and BFS flow-field pathfinding; drivable vehicles with physics; civilians, police, hostages and shopkeepers; seven mission types; dynamic day/night lighting, weather, particle systems, bullet tracers, and fully synthesized Web Audio. Save/load, XP/level progression, a heat system, and full mobile touch controls round it out.",
+    features: [
+      { title: "SWAT Operator", desc: "8-direction movement, mouse aiming, weapon rotation, sprint with stamina, roll/dodge with i-frames, reload, and armor that absorbs damage before health.", icon: "\uD83D\uDC6E" },
+      { title: "5 Weapons + 3 Grenades", desc: "Pistol, SMG, Assault Rifle, Shotgun (8 pellets), Sniper \u2014 each with damage, fire rate, recoil/recovery, spread, mag, reload, bullet speed, penetration. Plus Frag, Flash (stun), and Smoke (blocks LOS).", icon: "\uD83D\uDD2B" },
+      { title: "Intelligent Enemy AI", desc: "State machine: patrol \u2192 investigate gunfire \u2192 chase \u2192 take cover \u2192 flank \u2192 attack \u2192 search \u2192 flee. Line-of-sight raycasting + sound propagation + tiered accuracy (thug/soldier/elite).", icon: "\uD83E\uDD16" },
+      { title: "Modern City", desc: "Seven districts with asphalt roads, lane markings, sidewalks, crosswalks, parks and a lake. Realistic objects: cars, trucks, containers, barriers, lights, signs, trees, hydrants, explosive barrels.", icon: "\uD83C\uDFD9\uFE0F" },
+      { title: "Grid Pathfinding", desc: "Lightweight BFS flow-field pathfinding so enemies navigate around buildings, take cover behind corners, and flank the player instead of walking into walls.", icon: "\uD83E\uDDED" },
+      { title: "Drivable Vehicles", desc: "Enter/exit Sedan, Police Cruiser (lights + siren), SUV, and Box Truck \u2014 accel/brake/steer with momentum, collision damage, headlights, and explosions.", icon: "\uD83D\uDE97" },
+      { title: "7 Mission Types", desc: "Eliminate Targets, Hostage Rescue, Secure Building, Bomb Defusal (timer), VIP Escort, Capture Criminal, Collect Intelligence \u2014 with markers, timers, rewards.", icon: "\uD83C\uDFAF" },
+      { title: "NPCs & Heat", desc: "Civilians flee danger, police engage enemies, hostages cower then follow when freed. A 5-star heat system escalates enemy response to your actions.", icon: "\uD83D\uDC65" },
+      { title: "Tactical HUD & Minimap", desc: "Health, armor, stamina, weapon + ammo + reserve, grenade counts, money, XP/level, kill counter, mission tracker + timer, speed, vehicle health \u2014 plus a live minimap.", icon: "\uD83D\uDDFA\uFE0F" },
+      { title: "Atmosphere & Audio", desc: "Dynamic day/night lighting, weather (rain/fog), bullet tracers, particle systems (blood, sparks, smoke, explosions, shell casings), and fully synthesized per-weapon sound.", icon: "\uD83C\uDF08" },
+    ],
+    techStack: [
+      { name: "JavaScript (ES Modules)", icon: "\u26A1" },
+      { name: "Canvas API", icon: "\uD83C\uDFA8" },
+      { name: "OOP Architecture", icon: "\uD83E\uDDE9" },
+      { name: "Web Audio", icon: "\uD83D\uDD0A" },
+      { name: "A* / BFS Pathfinding", icon: "\uD83E\uDDED" },
+      { name: "localStorage", icon: "\uD83D\uDDC3\uFE0F" },
+    ],
+    previewDescription:
+      "A realistic top-down tactical shooter rendered on HTML5 Canvas. A SWAT operator moves through a modern city at dusk \u2014 HUD showing health, armor, ammo, and mission tracker, a minimap tracking enemies and objectives, glowing markers, bullet tracers, and dynamic night lighting over detailed 2.5D buildings and streets.",
+    category: "Web Development",
+    language: "JavaScript",
+    status: "Completed",
+    difficulty: "Advanced",
+    date: "2025",
+    highlights: [
+      "26-module OOP architecture in vanilla JS",
+      "Enemy AI with line-of-sight and BFS pathfinding",
+      "5 weapons, 3 grenades, drivable vehicles, 7 missions",
+    ],
     featured: true,
   },
   {
@@ -315,6 +449,17 @@ export const projects: Project[] = [
     ],
     previewDescription:
       "The dashboard delivers an institutional-grade trading experience: a live NEPSE overview, interactive candlestick charts, sector heatmaps, an IPO/SEBON tracker, and AI-assisted market insights \u2014 all within a fast, responsive dark interface.",
+    category: "Web Development",
+    language: "JavaScript",
+    status: "In Progress",
+    difficulty: "Advanced",
+    date: "2025",
+    highlights: [
+      "Real-time NEPSE data with TradingView charts",
+      "Technical pattern detection and AI insights",
+      "IPO/SEBON tracker and stock screener",
+    ],
+    isPrivate: true,
     featured: true,
   },
 ];
@@ -322,3 +467,17 @@ export const projects: Project[] = [
 export function getProjectBySlug(slug: string): Project | undefined {
   return projects.find((p) => p.slug === slug);
 }
+
+/* ── Derived, honest statistics for the Projects page ── */
+export const projectStats = {
+  completed: projects.filter((p) => p.status === 'Completed').length,
+  total: projects.length,
+  featured: projects.filter((p) => p.featured).length,
+  technologies: new Set(projects.flatMap((p) => p.techStack.map((t) => t.name))).size,
+  categories: new Set(projects.map((p) => p.category)).size,
+} as const;
+
+/* The primary featured project shown in the showcase banner. */
+export const featuredProject =
+  projects.find((p) => p.slug === 'neon-city') ?? projects.find((p) => p.featured) ?? projects[0];
+

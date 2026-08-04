@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# private assets — gated behind NextAuth login on the deployed site;
+# must NOT be committed to the public repo (would bypass the auth gate).
+/private
+
 # vercel
 .vercel
 

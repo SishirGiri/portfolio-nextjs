@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="description" content="TACTICAL OPS — a realistic top-down tactical shooter: modern city, SWAT operator, weapons, intelligent enemy AI, vehicles, missions." />
+  <meta name="theme-color" content="#05060f" />
+  <title>Tactical Ops — Top-Down Shooter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="Tactical Ops game viewport"></canvas>
+  <canvas id="minimap" aria-label="Tactical Ops minimap"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hud">
+    <div class="hud-cluster hud-tl">
+      <div class="vital"><span class="vi">❤️</span><div class="bar"><div id="health-bar" class="bar-fill b-hp"></div></div></div>
+      <div class="vital"><span class="vi">🛡️</span><div class="bar"><div id="armor-bar" class="bar-fill b-ar"></div></div></div>
+      <div class="vital"><span class="vi">🏃</span><div class="bar bar-sm"><div id="stamina-bar" class="bar-fill b-st"></div></div></div>
+      <div class="vital vital-heat"><span class="vi">★</span><span id="heat-stars" class="heat-stars"></span></div>
+    </div>
+
+    <div class="hud-cluster hud-tr">
+      <div class="hud-stat"><span class="hsi">💰</span><span id="hud-money" class="hsv">$0</span></div>
+      <div class="hud-stat hud-xp"><span class="hsl">LV<span id="hud-level">1</span></span><div class="bar bar-xp"><div id="xp-bar" class="bar-fill b-x"></div></div></div>
+      <div class="hud-stat"><span class="hsi">💀</span><span id="hud-kills" class="hsv">0</span></div>
+    </div>
+
+    <div class="hud-cluster hud-bl">
+      <div class="weapon-box">
+        <span id="weapon-icon" class="weapon-icon">🔫</span>
+        <div class="weapon-info">
+          <span id="weapon-name" class="weapon-name">P-9 Pistol</span>
+          <span id="weapon-ammo" class="weapon-ammo">14 / 14</span>
+          <span id="weapon-reserve" class="weapon-reserve">+0</span>
+        </div>
+      </div>
+      <div class="grenade-box">
+        <span id="grenade-icon" class="weapon-icon">💣</span>
+        <div class="weapon-info">
+          <span id="grenade-name" class="weapon-name">Frag</span>
+          <span id="grenade-count" class="weapon-ammo">x2</span>
+        </div>
+      </div>
+      <div id="weapon-flash" class="weapon-flash"></div>
+    </div>
+
+    <div class="hud-cluster hud-bc" id="drive-hud">
+      <div class="drive-readout"><span id="drive-speed">0</span><span class="drive-unit">KM/H</span></div>
+      <div class="drive-extra">
+        <div class="mini-bar"><span class="mb-l">🚗</span><div class="bar"><div id="veh-bar" class="bar-fill b-vh"></div></div></div>
+        <div class="mini-bar"><span class="mb-l">⚡</span><div class="bar"><div id="nitro-bar" class="bar-fill b-ni"></div></div></div>
+      </div>
+    </div>
+
+    <div class="hud-cluster hud-br" id="mission-tracker">
+      <div class="mt-title">🎯 <span id="mt-name">No active mission</span></div>
+      <div id="mt-desc" class="mt-desc">Find a <span class="mt-mark">?</span> marker to start one.</div>
+      <div class="mt-timer-wrap"><span id="mt-timer" class="mt-timer"></span></div>
+    </div>
+
+    <div id="toast-wrap" class="toast-wrap" aria-live="polite"></div>
+    <div id="prompt" class="prompt hidden"><span id="prompt-key">E</span> <span id="prompt-text">Enter vehicle</span></div>
+  </div>
+
+  <!-- Mobile controls -->
+  <div id="touch" class="touch hidden">
+    <div id="stick" class="stick"><div id="stick-knob" class="stick-knob"></div></div>
+    <div class="touch-actions">
+      <button id="t-fire" class="t-btn t-fire" type="button">🔥</button>
+      <button id="t-enter" class="t-btn t-enter" type="button">E</button>
+      <button id="t-reload" class="t-btn" type="button" title="Reload">🔄</button>
+      <button id="t-roll" class="t-btn" type="button" title="Roll">🤸</button>
+      <button id="t-grenade" class="t-btn" type="button" title="Grenade">💣</button>
+      <button id="t-switch" class="t-btn" type="button" title="Switch grenade">🌫️</button>
+    </div>
+  </div>
+
+  <!-- Main menu -->
+  <div id="menu" class="overlay menu-overlay">
+    <div class="menu-stars"></div>
+    <div class="menu-content">
+      <h1 class="menu-title"><span class="nc-1">TACTICAL</span> <span class="nc-2">OPS</span></h1>
+      <p class="menu-sub">Realistic top-down tactical shooter</p>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" id="btn-new" type="button">▶ Deploy</button>
+        <button class="menu-btn" id="btn-continue" type="button">↩ Continue</button>
+        <button class="menu-btn" id="btn-controls" type="button">🎮 Controls</button>
+        <button class="menu-btn" id="btn-credits" type="button">✦ Credits</button>
+        <button class="menu-btn ghost" id="btn-exit" type="button">← Back to Portfolio</button>
+      </div>
+      <div class="menu-foot">Original work · HTML5 Canvas · ES Modules</div>
+    </div>
+  </div>
+
+  <!-- Pause -->
+  <div id="pause" class="overlay hidden">
+    <div class="panel-box">
+      <h2 class="panel-title">⏸ Paused</h2>
+      <div class="panel-buttons">
+        <button class="menu-btn primary" id="p-resume" type="button">▶ Resume</button>
+        <button class="menu-btn" id="p-settings" type="button">⚙ Settings</button>
+        <button class="menu-btn" id="p-controls" type="button">🎮 Controls</button>
+        <button class="menu-btn" id="p-save" type="button">💾 Save Game</button>
+        <button class="menu-btn ghost" id="p-menu" type="button">⌂ Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div id="controls" class="overlay hidden">
+    <div class="panel-box panel-wide">
+      <h2 class="panel-title">🎮 Controls</h2>
+      <div class="ctrl-grid">
+        <div class="ctrl-section"><h3>🚶 On Foot</h3><ul>
+          <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — Move (8-dir)</li>
+          <li><kbd>Mouse</kbd> — Aim</li>
+          <li><kbd>Click</kbd> — Fire</li>
+          <li><kbd>R</kbd> — Reload</li>
+          <li><kbd>Shift</kbd> — Sprint</li>
+          <li><kbd>Space</kbd>/<kbd>Q</kbd> — Roll (dodge)</li>
+          <li><kbd>1</kbd>–<kbd>5</kbd> — Switch weapon</li>
+          <li><kbd>G</kbd> — Throw grenade</li>
+          <li><kbd>E</kbd>/<kbd>F</kbd> — Interact / Enter vehicle</li>
+        </ul></div>
+        <div class="ctrl-section"><h3>🚗 Driving</h3><ul>
+          <li><kbd>W</kbd>/<kbd>S</kbd> — Throttle / Brake</li>
+          <li><kbd>A</kbd>/<kbd>D</kbd> — Steer</li>
+          <li><kbd>Space</kbd> — Nitro / Handbrake</li>
+          <li><kbd>E</kbd> — Exit vehicle</li>
+        </ul></div>
+        <div class="ctrl-section"><h3>📱 Mobile</h3><ul>
+          <li>Left joystick — Move / Drive</li>
+          <li>🔥 Fire · E Enter/Exit · 🔄 Reload</li>
+          <li>🤸 Roll · 💣 Grenade · 🌫️ Switch nade</li>
+        </ul></div>
+        <div class="ctrl-section"><h3>🌍 General</h3><ul>
+          <li><kbd>P</kbd>/<kbd>Esc</kbd> — Pause</li>
+          <li>Reach <span class="mt-mark">?</span> markers for missions</li>
+          <li>🔧 Garage · 🏪 Armory · 🏠 Safe house</li>
+        </ul></div>
+      </div>
+      <button class="menu-btn primary" id="c-close" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings" class="overlay hidden">
+    <div class="panel-box">
+      <h2 class="panel-title">⚙ Settings</h2>
+      <div class="settings-list">
+        <label class="setting-row"><span>🔊 Sound</span><input type="checkbox" id="set-sound" /></label>
+        <label class="setting-row"><span>🌧️ Weather</span>
+          <select id="set-weather"><option value="auto">Auto cycle</option><option value="clear">Clear</option><option value="rain">Rain</option><option value="fog">Fog</option></select></label>
+        <label class="setting-row"><span>🌆 Time of day</span>
+          <select id="set-time"><option value="auto">Auto cycle</option><option value="day">Always day</option><option value="night">Always night</option></select></label>
+        <label class="setting-row"><span>🩸 Screen shake</span><input type="checkbox" id="set-shake" checked /></label>
+      </div>
+      <button class="menu-btn primary" id="s-close" type="button">Done</button>
+    </div>
+  </div>
+
+  <!-- Credits -->
+  <div id="credits" class="overlay hidden">
+    <div class="panel-box">
+      <h2 class="panel-title">✦ Credits</h2>
+      <p class="credits-text"><strong>TACTICAL OPS</strong><br/>Design, code, art &amp; audio — <em>original work</em>.<br/>Built with HTML5 Canvas, vanilla JS (ES Modules) &amp; CSS.<br/><br/>All characters, weapons, vehicles, the city and branding are <strong>original fiction</strong>.</p>
+      <button class="menu-btn primary" id="cr-close" type="button">Close</button>
+    </div>
+  </div>
+
+  <!-- Garage -->
+  <div id="garage" class="overlay hidden">
+    <div class="panel-box panel-wide">
+      <h2 class="panel-title">🔧 Garage</h2>
+      <div class="garage-layout">
+        <div class="garage-cars" id="garage-cars"></div>
+        <div class="garage-detail" id="garage-detail"></div>
+      </div>
+      <div class="garage-foot"><span id="garage-money" class="garage-money">💰 $0</span><button class="menu-btn primary" id="g-close" type="button">Leave Garage</button></div>
+    </div>
+  </div>
+
+  <!-- Result / Shop -->
+  <div id="result" class="overlay hidden">
+    <div class="panel-box"><h2 id="result-title" class="panel-title">Result</h2><div id="result-body" class="result-body"></div><button class="menu-btn primary" id="r-close" type="button">Close</button></div>
+  </div>
+
+  <!-- Game over -->
+  <div id="gameover" class="overlay hidden">
+    <div class="panel-box">
+      <h2 class="panel-title go-title">💀 KIA</h2>
+      <p class="go-text">You were taken down in the field.</p>
+      <div class="panel-buttons">
+        <button class="menu-btn primary" id="go-revive" type="button">🏥 Med-evac ($500)</button>
+        <button class="menu-btn ghost" id="go-menu" type="button">⌂ Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="overlay loading-overlay">
+    <div class="loader-spin"></div>
+    <div class="loader-text">Loading city…</div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
