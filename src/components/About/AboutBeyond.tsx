@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Gamepad2, Cpu, BookOpen, Lightbulb, Trophy, Music } from 'lucide-react';
+import { Gamepad2, Cpu, BookOpen, Lightbulb, Trophy, Music, TrendingUp } from 'lucide-react';
 import AboutSectionHead from './AboutSectionHead';
 import { staggerContainer, staggerItem, inViewport } from './motion';
 
@@ -14,8 +14,18 @@ const HOBBIES = [
   { icon: Music, label: 'Music' },
 ];
 
+/** Featured interest rendered as a wider, richer card spanning the grid row. */
+const SHARE_MARKET = {
+  icon: TrendingUp,
+  label: 'Share Market',
+  description:
+    'I enjoy trading in the share market, analyzing market trends and company performance, and making informed decisions about when to buy and sell.',
+  focus: ['Buying', 'Selling', 'Trading', 'Market Analysis'],
+};
+
 /** 8. Beyond Coding — hobbies and interests as glass cards. */
 export default function AboutBeyond() {
+  const ShareIcon = SHARE_MARKET.icon;
   return (
     <section className="about-section">
       <div className="container">
@@ -45,6 +55,27 @@ export default function AboutBeyond() {
               </motion.div>
             );
           })}
+
+          {/* Featured interest — Share Market */}
+          <motion.div
+            className="about-glass about-beyond-card about-beyond-card--featured"
+            variants={staggerItem}
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.25 }}
+          >
+            <span className="about-beyond-icon about-beyond-icon--share">
+              <ShareIcon />
+            </span>
+            <div className="about-beyond-body">
+              <span className="about-beyond-label">{SHARE_MARKET.label}</span>
+              <p className="about-beyond-desc">{SHARE_MARKET.description}</p>
+              <ul className="about-beyond-focus">
+                {SHARE_MARKET.focus.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

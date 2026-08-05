@@ -7,6 +7,7 @@ import { staggerContainer, staggerItem, inViewport } from './motion';
 const FACTS = [
   { emoji: '☕', label: 'Love coding late at night' },
   { emoji: '🎮', label: 'Enjoy game development' },
+  { emoji: '📈', label: 'Follow the share market' },
   { emoji: '🌍', label: 'Based in Nepal' },
   { emoji: '📚', label: 'Always learning something new' },
   { emoji: '💡', label: 'Curious about emerging tech' },

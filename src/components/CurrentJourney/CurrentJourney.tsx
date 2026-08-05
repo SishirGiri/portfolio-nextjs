@@ -27,8 +27,12 @@ const TERMINAL_LINES: { cmd: string; out: string[] }[] = [
     ],
   },
   {
+    cmd: '> interests',
+    out: ['Gaming', 'Share Market & Trading', 'Football', 'Music'],
+  },
+  {
     cmd: '> learning',
-    out: ['Next.js', 'Machine Learning', 'Cloud Computing', 'Backend Development'],
+    out: ['Next.js', 'Machine Learning', 'Cloud Computing', 'Market Analysis'],
   },
   {
     cmd: '> location',

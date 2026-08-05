@@ -5062,7 +5062,7 @@ a.ci-value:hover { color: var(--cyan); }
 /* ── 7. Fun Facts ── */
 .about-fun-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 18px;
 }
 .about-fun-card {
@@ -5113,6 +5113,53 @@ a.ci-value:hover { color: var(--cyan); }
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text);
+}
+
+/* Featured Share Market card — spans the full grid row. */
+.about-beyond-card--featured {
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  padding: 22px 24px;
+}
+.about-beyond-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.about-beyond-icon--share {
+  color: var(--green, #22c55e);
+  background: color-mix(in srgb, var(--green, #22c55e) 12%, var(--bg-glass));
+  border-color: color-mix(in srgb, var(--green, #22c55e) 35%, var(--border));
+}
+.about-beyond-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 68ch;
+}
+.about-beyond-focus {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.about-beyond-focus li {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+}
+@media (max-width: 768px) {
+  .about-beyond-card--featured { flex-direction: column; }
 }
 
 /* ── 9. Quick Facts ── */
@@ -5209,7 +5256,7 @@ a.ci-value:hover { color: var(--cyan); }
   .about-grid-3    { grid-template-columns: repeat(2, 1fr); }
   .focus-grid-7    { grid-template-columns: repeat(2, 1fr); }
   .about-beyond-grid { grid-template-columns: repeat(3, 1fr); }
-  .about-fun-grid  { grid-template-columns: repeat(5, 1fr); }
+  .about-fun-grid  { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* ── Responsive: 768px (tablet) ── */

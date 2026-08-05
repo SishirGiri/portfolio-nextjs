@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#050810" />
+  <title>Car Game — City Driving Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 3D canvas mount -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ───────── HUD ───────── -->
+  <div id="hud" class="hud hidden">
+    <!-- Top-left: mission + distance -->
+    <div class="hud-top-left">
+      <div class="hud-mission"><span class="hud-label">MISSION</span><span id="hud-mission-text">—</span></div>
+      <div class="hud-distance"><span class="hud-mini-label">📍</span> <span id="hud-distance">0m</span></div>
+      <div id="hud-timer" class="hud-timer hidden"><span class="hud-mini-label">⏱</span> <span id="hud-timer-text">00:00</span></div>
+    </div>
+
+    <!-- Top-right: money + sound -->
+    <div class="hud-top-right">
+      <div class="hud-money" id="hud-money">$0</div>
+      <button id="btn-sound" class="hud-icon-btn" aria-label="Toggle sound" title="Sound (M)">🔊</button>
+      <button id="btn-pause" class="hud-icon-btn" aria-label="Pause" title="Pause (P)">⏸</button>
+    </div>
+
+    <!-- Bottom-right: speedometer + gauges -->
+    <div class="hud-bottom-right">
+      <div class="gauge-row">
+        <div class="gauge"><span class="gauge-label">FUEL</span><div class="gauge-bar"><div id="gauge-fuel" class="gauge-fill fuel"></div></div></div>
+        <div class="gauge"><span class="gauge-label">HEALTH</span><div class="gauge-bar"><div id="gauge-health" class="gauge-fill health"></div></div></div>
+      </div>
+      <div class="speedo">
+        <span id="hud-speed" class="speedo-value">0</span>
+        <span class="speedo-unit">KM/H</span>
+      </div>
+    </div>
+
+    <!-- Bottom-left: minimap -->
+    <div class="hud-bottom-left">
+      <canvas id="minimap" width="150" height="150"></canvas>
+    </div>
+
+    <!-- Center toast (warnings / pickup) -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <!-- ───────── Mobile controls ───────── -->
+  <div id="mobile-controls" class="mobile-controls hidden">
+    <div class="mc-left">
+      <button class="mc-btn mc-steer" id="mc-left" aria-label="Steer left">◀</button>
+      <button class="mc-btn mc-steer" id="mc-right" aria-label="Steer right">▶</button>
+    </div>
+    <div class="mc-right">
+      <button class="mc-btn mc-pedal" id="mc-gas" aria-label="Accelerate">⬆</button>
+      <button class="mc-btn mc-pedal" id="mc-brake" aria-label="Brake / reverse">⬇</button>
+    </div>
+    <div class="mc-bottom">
+      <button class="mc-btn mc-small" id="mc-handbrake" aria-label="Handbrake">✋</button>
+      <button class="mc-btn mc-small" id="mc-camera" aria-label="Change camera">🎥</button>
+      <button class="mc-btn mc-small" id="mc-horn" aria-label="Horn">📢</button>
+    </div>
+  </div>
+
+  <!-- ───────── Main menu ───────── -->
+  <div id="menu" class="overlay">
+    <div class="overlay-card">
+      <div class="logo-row"><span class="logo-emoji">🚗</span></div>
+      <h1 class="logo-title">CAR GAME</h1>
+      <p class="logo-sub">City Driving Simulator</p>
+      <div class="menu-stats">
+        <div class="menu-stat"><span class="ms-label">MONEY</span><span id="menu-money" class="ms-value">$0</span></div>
+        <div class="menu-stat"><span class="ms-label">XP</span><span id="menu-xp" class="ms-value">0</span></div>
+        <div class="menu-stat"><span class="ms-label">MISSIONS</span><span id="menu-missions" class="ms-value">0/3</span></div>
+      </div>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" data-action="continue" id="btn-continue">▶ Continue</button>
+        <button class="menu-btn" data-action="career">🏁 Career</button>
+        <button class="menu-btn" data-action="free">🛣 Free Drive</button>
+        <button class="menu-btn" data-action="controls">🎮 Controls</button>
+      </div>
+      <a href="/projects" class="menu-back">← Back to portfolio</a>
+    </div>
+  </div>
+
+  <!-- ───────── Mission select ───────── -->
+  <div id="missions-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title">Select Mission</h2>
+      <div id="missions-list" class="missions-list"></div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ───────── Controls help ───────── -->
+  <div id="controls-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title">Controls</h2>
+      <div class="controls-grid">
+        <div class="ctl"><kbd>W</kbd>/<kbd>↑</kbd><span>Accelerate</span></div>
+        <div class="ctl"><kbd>S</kbd>/<kbd>↓</kbd><span>Brake / Reverse</span></div>
+        <div class="ctl"><kbd>A</kbd>/<kbd>←</kbd><span>Turn left</span></div>
+        <div class="ctl"><kbd>D</kbd>/<kbd>→</kbd><span>Turn right</span></div>
+        <div class="ctl"><kbd>Space</kbd><span>Handbrake</span></div>
+        <div class="ctl"><kbd>C</kbd><span>Change camera</span></div>
+        <div class="ctl"><kbd>H</kbd><span>Horn</span></div>
+        <div class="ctl"><kbd>P</kbd>/<kbd>Esc</kbd><span>Pause</span></div>
+        <div class="ctl"><kbd>M</kbd><span>Mute / Unmute</span></div>
+      </div>
+      <p class="controls-note">📱 Touch controls appear automatically on mobile.</p>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ───────── Pause ───────── -->
+  <div id="pause-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title">Paused</h2>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" data-action="resume">▶ Resume</button>
+        <button class="menu-btn" data-action="restart">↻ Restart Mission</button>
+        <button class="menu-btn" data-action="quit">✕ Exit to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── Mission complete ───────── -->
+  <div id="complete-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title success">Mission Complete</h2>
+      <div id="complete-stars" class="stars">⭐⭐⭐</div>
+      <div class="reward-row">
+        <div class="reward"><span id="complete-money" class="reward-value">$0</span><span class="reward-label">Money</span></div>
+        <div class="reward"><span id="complete-xp" class="reward-value">0</span><span class="reward-label">XP</span></div>
+      </div>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" data-action="next">▶ Next</button>
+        <button class="menu-btn" data-action="quit">🏠 Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── Fail ───────── -->
+  <div id="fail-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title fail" id="fail-title">Mission Failed</h2>
+      <p id="fail-reason" class="fail-reason">—</p>
+      <div class="menu-buttons">
+        <button class="menu-btn primary" data-action="restart">↻ Retry</button>
+        <button class="menu-btn" data-action="quit">🏠 Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loader" class="loader">
+    <div class="loader-spinner"></div>
+    <span>Loading city…</span>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

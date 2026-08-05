@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Full-bleed wrapper for the standalone HTML/CSS/JS demos that live under
@@ -19,11 +19,18 @@ export default function DemoFrame({
   title: string;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Reset scroll on mount so the page never opens scrolled down.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Give the iframe keyboard focus once loaded so games that listen for
+  // keydown inside the iframe receive input without requiring a click first.
+  useEffect(() => {
+    if (loaded) iframeRef.current?.focus();
+  }, [loaded]);
 
   return (
     <div className="demo-frame">
@@ -40,8 +47,10 @@ export default function DemoFrame({
         </div>
       )}
       <iframe
+        ref={iframeRef}
         src={src}
         title={title}
+        tabIndex={0}
         className={`demo-iframe${loaded ? ' loaded' : ''}`}
         onLoad={() => setLoaded(true)}
         loading="lazy"
