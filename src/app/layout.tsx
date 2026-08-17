@@ -16,11 +16,11 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Sishir Bharati — Developer & AI Enthusiast",
-  description: "Personal portfolio of Sishir Bharati – Aspiring Developer and AI Enthusiast from Nepal.",
+  title: "Sishir Bharati — SEO-Optimized Developer & AI Developer",
+  description: "Personal portfolio of Sishir Bharati – SEO-Optimized Developer & AI Developer from Nepal.",
   openGraph: {
-    title: "Sishir Bharati — Developer & AI Enthusiast",
-    description: "Personal portfolio of Sishir Bharati – Aspiring Developer and AI Enthusiast from Nepal.",
+    title: "Sishir Bharati — SEO-Optimized Developer & AI Developer",
+    description: "Personal portfolio of Sishir Bharati – SEO-Optimized Developer & AI Developer from Nepal.",
     type: "website",
   },
 };

@@ -1,164 +1,413 @@
-// ════════════════════════════════════════════
-// TRAFFIC — lightweight AI vehicles
-// Lane-following on the road grid, stop at red lights,
-// despawn far from player. Simplified collision check.
-// ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// TRAFFIC — AI vehicles on the road graph.
+// District + time-of-day density, lane following, signal
+// compliance, pedestrian crosswalks, car following, lane
+// changes, honking, stalled-car events, emergency vehicles,
+// police patrols. Mesh pooling for spawn/despawn.
+// ════════════════════════════════════════════════════════
 import * as THREE from 'three';
-import { TRAFFIC, WORLD, COLORS } from './config.js';
-import { buildCarMesh } from './car.js';
+import { TRAFFIC_CONF, WORLD, LANES, COLORS } from './config.js';
+import { buildVehicleMesh } from './vehicles.js';
+import { clamp, rand, choice } from './utils.js';
 
 export class Traffic {
-  constructor(scene, world) {
+  constructor(scene, city) {
     this.scene = scene;
-    this.world = world;
-    this.cars = []; // { mesh, wheels, axis, dir, speed, x, z, color }
+    this.city = city;
+    this.cars = [];
+    this.quality = 1;
+    this.night = false;
+    this.wet = 0;
+    this.onHonk = null;
+    this._pool = new Map();   // style → [handles]
+    this._edgeMap = new Map();
+    for (const e of city.edges) {
+      this._edgeMap.set(`${e.a}_${e.b}`, e);
+      this._edgeMap.set(`${e.b}_${e.a}`, e);
+    }
   }
 
-  _spawnCar(playerPos) {
-    // pick a road line (vertical 'v' or horizontal 'h')
-    const { blockSize, blocksX, blocksZ, roadWidth } = WORLD;
-    const halfX = (blockSize * blocksX) / 2;
-    const halfZ = (blockSize * blocksZ) / 2;
-    const laneOffset = roadWidth / 4; // drive on one side
+  edgeBetween(a, b) { return this._edgeMap.get(`${a}_${b}`); }
 
-    const axis = Math.random() < 0.5 ? 'v' : 'h';
-    let x, z, dir;
-    if (axis === 'v') {
-      const lineIdx = Math.floor(Math.random() * (blocksX + 1));
-      x = lineIdx * blockSize - halfX;
-      const side = Math.random() < 0.5 ? 1 : -1;
-      x += side * laneOffset;
-      dir = side > 0 ? 1 : -1; // +z or -z
-      z = playerPos.z + (Math.random() < 0.5 ? 1 : -1) * (TRAFFIC.spawnDistance * (0.5 + Math.random() * 0.5));
-    } else {
-      const lineIdx = Math.floor(Math.random() * (blocksZ + 1));
-      z = lineIdx * blockSize - halfZ;
-      const side = Math.random() < 0.5 ? 1 : -1;
-      z += side * laneOffset;
-      dir = side > 0 ? 1 : -1; // +x or -x
-      x = playerPos.x + (Math.random() < 0.5 ? 1 : -1) * (TRAFFIC.spawnDistance * (0.5 + Math.random() * 0.5));
-    }
-
-    const color = TRAFFIC.colors[Math.floor(Math.random() * TRAFFIC.colors.length)];
-    const built = buildCarMesh(color);
-    // scale down slightly for variety
-    built.group.scale.setScalar(0.92);
-    this.scene.add(built.group);
-
-    const car = {
-      mesh: built.group,
-      wheels: built.wheels,
-      axis, dir, speed: 0,
-      x, z, color,
-      heading: 0,
+  /** Traffic-density factor of an edge from its adjacent districts. */
+  _edgeDensity(e) {
+    if (e.highway) return 0.85;
+    const d = (i, j) => {
+      i = clamp(i, 0, WORLD.NX - 1); j = clamp(j, 0, WORLD.NZ - 1);
+      return this.city.districtInfo(i, j).traffic;
     };
-    this._place(car);
-    this.cars.push(car);
+    let a, b;
+    if (e.axis === 'z') { a = d(e.i - 1, e.j); b = d(e.i, e.j); }
+    else { a = d(e.i, e.j - 1); b = d(e.i, e.j); }
+    const v = (a + b) / 2;
+    return v > 0.01 ? v : 1; // bridges over "river" cells default busy
   }
 
-  _place(car) {
-    if (car.axis === 'v') {
-      car.heading = car.dir > 0 ? 0 : Math.PI; // facing +z or -z
-    } else {
-      car.heading = car.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-    }
-    car.mesh.position.set(car.x, 0, car.z);
-    car.mesh.rotation.y = car.heading;
+  _edgeSpeed(e) {
+    if (e.bridge) return 15;
+    if (e.highway) return TRAFFIC_CONF.highwaySpeed;
+    if (e.width >= WORLD.BANK_W) return TRAFFIC_CONF.bankSpeed;
+    if (e.width >= 18) return TRAFFIC_CONF.avenueSpeed;
+    return TRAFFIC_CONF.citySpeed;
   }
 
-  /** distance² helper */
-  _dist2(ax, az, bx, bz) {
-    const dx = ax - bx, dz = az - bz;
-    return dx * dx + dz * dz;
-  }
-
-  /** Check if the car must stop (red light ahead within stopDistance) */
-  _mustStopAtLight(car) {
-    const { blockSize, blocksX, blocksZ } = WORLD;
-    const halfX = (blockSize * blocksX) / 2;
-    const halfZ = (blockSize * blocksZ) / 2;
-    // nearest intersection ahead along travel direction
-    let nearest = null, bestD = TRAFFIC.stopDistance;
-    for (const it of this.world.intersections) {
-      let ahead = false;
-      let d = Infinity;
-      if (car.axis === 'v') {
-        const dz = (it.z - car.z) * car.dir;
-        if (dz > 0 && dz < bestD && Math.abs(it.x - car.x) < 3) { ahead = true; d = dz; }
-      } else {
-        const dx = (it.x - car.x) * car.dir;
-        if (dx > 0 && dx < bestD && Math.abs(it.z - car.z) < 3) { ahead = true; d = dx; }
-      }
-      if (ahead && d < bestD) { bestD = d; nearest = it; }
-    }
-    if (!nearest) return false;
-    const state = nearest.lights.state;
-    // ns-green means vertical road is green
-    const greenForMe = car.axis === 'v' ? state === 'ns-green' : state === 'ew-green';
-    return !greenForMe;
-  }
-
-  update(dt, playerPos, playerCar) {
-    // spawn / despawn
-    for (let k = this.cars.length - 1; k >= 0; k--) {
-      const c = this.cars[k];
-      const d2 = this._dist2(c.x, c.z, playerPos.x, playerPos.z);
-      if (d2 > TRAFFIC.despawnDistance * TRAFFIC.despawnDistance) {
-        this.scene.remove(c.mesh);
-        this.cars.splice(k, 1);
+  /** Local density multiplier around a world position. */
+  _localDensity(playerPos) {
+    const i = clamp(Math.floor((playerPos.x + WORLD.halfX) / WORLD.BLOCK), 0, WORLD.NX - 1);
+    const j = clamp(Math.floor((playerPos.z + WORLD.halfZ) / WORLD.BLOCK), 0, WORLD.NZ - 1);
+    let sum = 0, n = 0;
+    for (let a = i - 1; a <= i + 1; a++) {
+      for (let b = j - 1; b <= j + 1; b++) {
+        if (a < 0 || a >= WORLD.NX || b < 0 || b >= WORLD.NZ) continue;
+        const d = this.city.districtInfo(a, b).traffic;
+        if (d > 0.01) { sum += d; n++; }
       }
     }
-    while (this.cars.length < TRAFFIC.maxCars) {
-      this._spawnCar(playerPos);
+    return n ? sum / n : 1;
+  }
+
+  get targetCount() {
+    const local = clamp(this._lastDensity || 1, 0.5, 1.8);
+    return Math.round(TRAFFIC_CONF.maxCars * this.quality * (this.night ? 0.5 : 1) * local);
+  }
+
+  _takeMesh(style, color, opts) {
+    const pool = this._pool.get(style);
+    if (pool && pool.length) {
+      const h = pool.pop();
+      h.paint.color.setHex(color);
+      h.group.visible = true;
+      return h;
     }
+    return buildVehicleMesh(style, color, { detail: 'low', ...opts });
+  }
 
-    for (const c of this.cars) {
-      // avoid the player car
-      const pd2 = this._dist2(c.x, c.z, playerPos.x, playerPos.z);
-      const playerBlocking = pd2 < TRAFFIC.stopDistance * TRAFFIC.stopDistance;
-
-      // stop for red light / player ahead
-      const stop = this._mustStopAtLight(c) || playerBlocking;
-      if (stop) {
-        c.speed = Math.max(0, c.speed - TRAFFIC.accel * 1.4 * dt);
-      } else {
-        c.speed = Math.min(TRAFFIC.maxSpeed, c.speed + TRAFFIC.accel * dt);
-      }
-      const move = c.speed * dt;
-      if (c.axis === 'v') c.z += c.dir * move;
-      else c.x += c.dir * move;
-
-      // keep within world bounds; if out, wrap
-      const lim = WORLD.size / 2 + 10;
-      if (Math.abs(c.x) > lim || Math.abs(c.z) > lim) {
-        // respawn near player
-        this.scene.remove(c.mesh);
-        // mark for removal; will respawn next frame via while loop
-        c._dead = true;
-      }
-
-      c.mesh.position.set(c.x, 0, c.z);
-      for (const w of c.wheels) w.rotation.x += move * 0.6;
-    }
-    // cleanup dead
-    for (let k = this.cars.length - 1; k >= 0; k--) {
-      if (this.cars[k]._dead) this.cars.splice(k, 1);
+  _giveMesh(c) {
+    c.h.group.visible = false;
+    let pool = this._pool.get(c.style);
+    if (!pool) { pool = []; this._pool.set(c.style, pool); }
+    if (pool.length < 8) pool.push(c.h);
+    else {
+      this.scene.remove(c.h.group);
+      c.h.group.traverse((o) => o.geometry?.dispose?.());
     }
   }
 
-  /** Check collision between player (at px,pz with radius pr) and traffic.
-   *  Returns the collided car or null. */
-  checkCollision(px, pz, pr = 1.4) {
-    for (const c of this.cars) {
-      const dx = c.x - px, dz = c.z - pz;
-      const rr = (pr + 1.6);
-      if (dx * dx + dz * dz < rr * rr) return c;
+  _spawn(playerPos) {
+    for (let attempt = 0; attempt < 16; attempt++) {
+      const e = choice(this.city.edges);
+      if (e.tunnel && Math.random() < 0.5) continue;
+      // bias spawns toward busy edges near the player
+      const density = this._edgeDensity(e);
+      if (Math.random() > density) continue;
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      const s = rand(4, e.w - 4);
+      const from = dir === 1 ? this.city.nodes[e.a] : this.city.nodes[e.b];
+      const d = Math.hypot(from.x - playerPos.x, from.z - playerPos.z);
+      if (d < TRAFFIC_CONF.spawnMin || d > TRAFFIC_CONF.spawnMax) continue;
+      const tw = TRAFFIC_CONF.types;
+      const total = tw.reduce((s2, t) => s2 + t.w, 0);
+      let roll = Math.random() * total;
+      let type = tw[0];
+      for (const t of tw) { roll -= t.w; if (roll <= 0) { type = t; break; } }
+      const color = type.style === 'taxi' ? 0xf7c531
+        : type.style === 'bus' ? 0x3e6b8f
+        : type.style === 'truck' ? 0xa85533
+        : type.style === 'police' ? 0x1d2a44
+        : type.style === 'ambulance' ? 0xe8edf4
+        : type.style === 'fire' ? 0xc03028
+        : choice(TRAFFIC_CONF.colors);
+      const h = this._takeMesh(type.style, color, type.police ? { police: true } : {});
+      this.scene.add(h.group);
+      const lanes = LANES.lanesFor(e.width);
+      // driver personality: normal / aggressive / slow
+      const pRoll = Math.random();
+      const personality = pRoll < 0.15 ? 'aggressive' : pRoll < 0.3 ? 'slow' : 'normal';
+      const c = {
+        h, edge: e, dir, s,
+        lane: Math.random() < 0.6 ? 0 : Math.min(lanes.length - 1, 1),
+        laneCur: 0, laneTarget: 0,
+        speed: 0,
+        style: type.style,
+        personality,
+        isPatrol: !!type.police,
+        emergency: type.style === 'ambulance' || type.style === 'fire' || type.style === 'police',
+        honkT: 0, blockedT: 0, braking: false,
+        stalled: 0,
+      };
+      c.laneTarget = this._targetLaneOffset(c);
+      c.laneCur = c.laneTarget;
+      const p = this._carPos(c);
+      h.group.position.set(p.x, 0, p.z);
+      h.group.rotation.y = Math.atan2(p.hx, p.hz);
+      this.cars.push(c);
+      return c;
     }
     return null;
   }
 
-  clear() {
-    for (const c of this.cars) this.scene.remove(c.mesh);
+  _carPos(c) {
+    const e = c.edge;
+    const a = this.city.nodes[e.a], b = this.city.nodes[e.b];
+    const from = c.dir === 1 ? a : b;
+    const to = c.dir === 1 ? b : a;
+    const len = e.w;
+    const t = clamp(c.s, 0, len) / len;
+    const hx = (to.x - from.x) / len, hz = (to.z - from.z) / len;
+    const rx = hz, rz = -hx;
+    const off = c.laneCur;
+    return {
+      x: from.x + (to.x - from.x) * t + rx * off,
+      z: from.z + (to.z - from.z) * t + rz * off,
+      hx, hz,
+    };
+  }
+
+  _targetLaneOffset(c) {
+    return LANES.lanesFor(c.edge.width)[Math.min(c.lane, LANES.lanesFor(c.edge.width).length - 1)];
+  }
+
+  _signalStop(c) {
+    const e = c.edge;
+    const remaining = e.w - c.s;
+    if (remaining > TRAFFIC_CONF.lightStop + 2) return null;
+    const toNode = this.city.nodes[c.dir === 1 ? e.b : e.a];
+    if (e.bridge) return null;
+    // emergency vehicles push through slowly
+    const state = this.city.signalAt(toNode, e.axis);
+    if (state === 'g') return null;
+    return Math.max(0, remaining - TRAFFIC_CONF.lightStop * 0.55);
+  }
+
+  _carAhead(c) {
+    let best = null, bestDist = Infinity;
+    for (const o of this.cars) {
+      if (o === c) continue;
+      if (o.edge !== c.edge || o.dir !== c.dir) continue;
+      const ds = (o.s - c.s) * c.dir;
+      if (ds > 0 && ds < bestDist) { bestDist = ds; best = o; }
+    }
+    return best ? { car: best, dist: bestDist } : null;
+  }
+
+  _playerAhead(c, playerPos) {
+    const p = this._carPos(c);
+    const dx = playerPos.x - p.x, dz = playerPos.z - p.z;
+    const ahead = dx * p.hx + dz * p.hz;
+    const lat = Math.abs(dx * p.hz - dz * p.hx);
+    if (ahead > 0 && ahead < 16 && lat < 2.6) return ahead;
+    return null;
+  }
+
+  _pedAhead(c, peds) {
+    if (!peds) return null;
+    const p = this._carPos(c);
+    let best = Infinity;
+    for (const ped of peds.peds) {
+      if (!ped.g.visible || ped.state === 'hit') continue;
+      const dx = ped.g.position.x - p.x, dz = ped.g.position.z - p.z;
+      const ahead = dx * p.hx + dz * p.hz;
+      const lat = Math.abs(dx * p.hz - dz * p.hx);
+      if (ahead > 0 && ahead < TRAFFIC_CONF.crosswalkStop && lat < 2.8 && ahead < best) best = ahead;
+    }
+    return best === Infinity ? null : best;
+  }
+
+  _pickNextEdge(c) {
+    const e = c.edge;
+    const curNode = this.city.nodes[c.dir === 1 ? e.b : e.a];
+    const backNodeId = c.dir === 1 ? e.a : e.b;
+    const options = curNode.nb.filter((n) => n.id !== backNodeId);
+    const pool = options.length ? options : curNode.nb;
+    const straight = pool.filter((n) => {
+      const ne = this.edgeBetween(curNode.id, n.id);
+      return ne && ne.axis === e.axis;
+    });
+    const pickFrom = (straight.length && Math.random() < 0.65) ? straight : pool;
+    const pick = choice(pickFrom);
+    return { edge: this.edgeBetween(curNode.id, pick.id), toNode: pick.id };
+  }
+
+  update(dt, playerPos, playerSpeed, night, wetness, peds = null) {
+    this.night = night; this.wet = wetness;
+    this._lastDensity = this._localDensity(playerPos);
+
+    // despawn far cars (into the pool)
+    for (let k = this.cars.length - 1; k >= 0; k--) {
+      const c = this.cars[k];
+      const p = this._carPos(c);
+      if (Math.hypot(p.x - playerPos.x, p.z - playerPos.z) > TRAFFIC_CONF.despawn) {
+        this._giveMesh(c);
+        this.cars.splice(k, 1);
+      }
+    }
+    while (this.cars.length < this.targetCount) {
+      if (!this._spawn(playerPos)) break;
+    }
+
+    const weatherMul = 1 - wetness * 0.2;
+    const flash = Math.floor(performance.now() / 260) % 2 === 0;
+
+    for (const c of this.cars) {
+      const p = this._carPos(c);
+      let target = this._edgeSpeed(c.edge) * weatherMul;
+      let gap = TRAFFIC_CONF.gap;
+      let braking = false;
+      // personality: aggressive drivers speed and tailgate, slow ones cruise
+      if (c.personality === 'aggressive') { target *= 1.25; gap *= 0.65; }
+      else if (c.personality === 'slow') { target *= 0.72; gap *= 1.35; }
+      if (c.emergency) target *= 1.15;
+
+      // stalled-car random events
+      if (c.stalled > 0) {
+        c.stalled -= dt;
+        target = 0;
+        braking = true;
+      } else if (Math.random() < TRAFFIC_CONF.stalledEventChance * dt * 60) {
+        c.stalled = rand(5, 10);
+      }
+
+      // red light ahead
+      if (c.stalled <= 0) {
+        const stopIn = this._signalStop(c);
+        if (stopIn !== null) {
+          if (stopIn < 0.4) target = 0;
+          else target = Math.min(target, stopIn * 1.6);
+          braking = stopIn < 4;
+        }
+      }
+
+      // pedestrians on the crosswalk ahead
+      if (c.stalled <= 0) {
+        const pedIn = this._pedAhead(c, peds);
+        if (pedIn !== null) {
+          target = Math.min(target, Math.max(0, (pedIn - 3) * 1.5));
+          braking = pedIn < 5;
+        }
+      }
+
+      // car ahead
+      const ahead = this._carAhead(c);
+      if (ahead && ahead.dist < gap + 6) {
+        const desired = Math.min(target, Math.max(0, (ahead.dist - gap) * 1.8));
+        target = Math.min(target, desired);
+        if (target < c.speed - 1) braking = true;
+        if (ahead.dist < gap + 3 && ahead.car.speed < 4 && c.speed < 4) {
+          c.blockedT += dt;
+          if (c.blockedT > 1.2 && c.laneChangeT === undefined && c.edge.w - c.s > 10) {
+            const lanes = LANES.lanesFor(c.edge.width);
+            if (lanes.length > 1) {
+              const newLane = c.lane === 0 ? 1 : 0;
+              let clear = true;
+              for (const o of this.cars) {
+                if (o === c || o.edge !== c.edge || o.dir !== c.dir || o.lane !== newLane) continue;
+                if (Math.abs(o.s - c.s) < 9) { clear = false; break; }
+              }
+              if (clear) { c.lane = newLane; c.laneChangeT = 0; }
+              else c.blockedT = 0;
+            } else {
+              c.blockedT = 0;
+            }
+          }
+        } else {
+          c.blockedT = Math.max(0, c.blockedT - dt);
+        }
+      } else {
+        c.blockedT = Math.max(0, c.blockedT - dt);
+      }
+
+      // player ahead
+      const pAhead = this._playerAhead(c, playerPos);
+      if (pAhead !== null) {
+        const desired = Math.max(0, (pAhead - gap * 0.8) * 1.7);
+        if (desired < target) { target = desired; braking = pAhead < 5; }
+        if (pAhead < 5) {
+          c.honkT -= dt;
+          if (c.honkT <= 0) {
+            c.honkT = rand(4, 8);
+            if (this.onHonk) this.onHonk(Math.hypot(p.x - playerPos.x, p.z - playerPos.z));
+          }
+        }
+      }
+
+      // accelerate/brake toward target
+      if (c.speed < target) c.speed = Math.min(target, c.speed + TRAFFIC_CONF.accel * dt);
+      else c.speed = Math.max(target, c.speed - TRAFFIC_CONF.accel * 1.6 * dt);
+
+      // advance
+      c.s += c.speed * dt;
+
+      // reached node → next edge
+      if (c.s >= c.edge.w) {
+        const next = this._pickNextEdge(c);
+        if (!next.edge) continue;
+        const dirNext = next.edge.a === (c.dir === 1 ? c.edge.b : c.edge.a) ? 1 : -1;
+        c.edge = next.edge;
+        c.dir = dirNext;
+        c.s = 0.01;
+        c.laneChangeT = undefined;
+        c.laneCur = this._targetLaneOffset(c);
+        c.laneTarget = c.laneCur;
+      }
+
+      // lane change animation
+      c.laneTarget = this._targetLaneOffset(c);
+      if (c.laneChangeT !== undefined) {
+        c.laneChangeT += dt;
+        c.laneCur += (c.laneTarget - c.laneCur) * Math.min(1, dt * 2.2);
+        if (Math.abs(c.laneCur - c.laneTarget) < 0.05) {
+          c.laneCur = c.laneTarget;
+          c.laneChangeT = undefined;
+        }
+      }
+
+      // place mesh
+      const np = this._carPos(c);
+      c.h.group.position.set(np.x, 0, np.z);
+      c.h.group.rotation.y = Math.atan2(np.hx, np.hz);
+      const spin = c.speed * dt * 2.4;
+      for (const w of c.h.wheels) w.children[0].rotation.x += spin;
+      for (const b of c.h.brakeLights) b.material.color.setHex(braking ? COLORS.brakeLight : 0x551111);
+      // emergency lightbars flash
+      if (c.emergency && c.h.lightbar) {
+        c.h.lightbar.userData.red.material.color.setHex(flash ? 0xff3030 : 0x550000);
+        c.h.lightbar.userData.blue.material.color.setHex(!flash ? 0xffaa20 : 0x552200);
+      }
+      // stalled cars blink hazards
+      if (c.stalled > 0 && c.h.indicators.length) {
+        const blink = Math.floor(performance.now() / 400) % 2 === 0;
+        for (const ind of c.h.indicators) ind.material.color.setHex(blink ? COLORS.indicator : 0x7a5200);
+      }
+      const hl = night || wetness > 0.4;
+      for (const h2 of c.h.headlights) h2.material.color.setHex(hl ? COLORS.headlight : 0x6b6b58);
+      c.braking = braking;
+    }
+  }
+
+  /** Patrol car positions for the police violation system. */
+  patrolPositions(playerPos, maxDist = 45) {
+    const out = [];
+    for (const c of this.cars) {
+      if (!c.isPatrol) continue;
+      const p = this._carPos(c);
+      if (Math.hypot(p.x - playerPos.x, p.z - playerPos.z) < maxDist) out.push(p);
+    }
+    return out;
+  }
+
+  /** Collision check vs player circle. Returns {x,z,car} or null. */
+  checkCollision(px, pz, r = 1.5) {
+    for (const c of this.cars) {
+      const p = this._carPos(c);
+      const rr = r + 1.7;
+      const dx = p.x - px, dz = p.z - pz;
+      if (dx * dx + dz * dz < rr * rr) return { x: p.x, z: p.z, car: c };
+    }
+    return null;
+  }
+
+  clearAll() {
+    for (const c of this.cars) this._giveMesh(c);
     this.cars = [];
   }
 }

@@ -9,7 +9,6 @@ full-screen via an iframe on its own Next.js route.
 | Project           | Source (this repo)                  | Live route (internal) |
 |-------------------|-------------------------------------|-----------------------|
 | AI Chatbot        | `public/demos/chatbot/`             | `/demos/chatbot`        |
-| Live Data Dashboard | `public/demos/dashboard/`         | `/demos/dashboard`      |
 | Terminal RPG      | `public/demos/rpg/`                 | `/demos/rpg`            |
 | Digit Classifier  | `public/demos/classifier/`          | `/demos/classifier`     |
 | Smart Task Manager| `public/demos/tasks/`               | `/demos/tasks`          |
@@ -45,7 +44,6 @@ demos are instantly live at:
 
 ```
 https://<your-portfolio-domain>/demos/chatbot
-https://<your-portfolio-domain>/demos/dashboard
 https://<your-portfolio-domain>/demos/rpg
 https://<your-portfolio-domain>/demos/classifier
 https://<your-portfolio-domain>/demos/tasks

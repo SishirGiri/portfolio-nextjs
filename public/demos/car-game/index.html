@@ -4,170 +4,262 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#050810" />
-  <title>Car Game — City Driving Simulator</title>
+  <title>Car Game — Neon Drive · Open City</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 3D canvas mount -->
   <canvas id="game-canvas"></canvas>
 
-  <!-- ───────── HUD ───────── -->
+  <!-- ═══════════ HUD ═══════════ -->
   <div id="hud" class="hud hidden">
-    <!-- Top-left: mission + distance -->
     <div class="hud-top-left">
-      <div class="hud-mission"><span class="hud-label">MISSION</span><span id="hud-mission-text">—</span></div>
-      <div class="hud-distance"><span class="hud-mini-label">📍</span> <span id="hud-distance">0m</span></div>
-      <div id="hud-timer" class="hud-timer hidden"><span class="hud-mini-label">⏱</span> <span id="hud-timer-text">00:00</span></div>
+      <div class="hud-mission"><span class="hud-label">MISSION</span><span id="hud-mission">—</span></div>
+      <div class="hud-objective" id="hud-objective">—</div>
+      <div class="hud-meta-row">
+        <span class="hud-chip">📍 <span id="hud-distance">0 m</span></span>
+        <span class="hud-chip hidden" id="hud-timer">⏱ <span id="hud-timer-text">00:00.00</span></span>
+      </div>
     </div>
 
-    <!-- Top-right: money + sound -->
     <div class="hud-top-right">
       <div class="hud-money" id="hud-money">$0</div>
-      <button id="btn-sound" class="hud-icon-btn" aria-label="Toggle sound" title="Sound (M)">🔊</button>
-      <button id="btn-pause" class="hud-icon-btn" aria-label="Pause" title="Pause (P)">⏸</button>
-    </div>
-
-    <!-- Bottom-right: speedometer + gauges -->
-    <div class="hud-bottom-right">
-      <div class="gauge-row">
-        <div class="gauge"><span class="gauge-label">FUEL</span><div class="gauge-bar"><div id="gauge-fuel" class="gauge-fill fuel"></div></div></div>
-        <div class="gauge"><span class="gauge-label">HEALTH</span><div class="gauge-bar"><div id="gauge-health" class="gauge-fill health"></div></div></div>
+      <div class="hud-level-row">
+        <span class="hud-level" id="hud-level">LV 0</span>
+        <div class="hud-xp-bar"><div id="hud-xp-fill" class="hud-xp-fill"></div></div>
       </div>
-      <div class="speedo">
-        <span id="hud-speed" class="speedo-value">0</span>
-        <span class="speedo-unit">KM/H</span>
+      <div class="hud-env">
+        <span id="hud-clock">09:30</span><span class="dot">·</span><span id="hud-weather">Clear</span>
+      </div>
+      <div class="hud-btns">
+        <button id="btn-sound" class="hud-icon-btn" title="Sound">🔊</button>
+        <button id="btn-map" class="hud-icon-btn" title="Map (M)">🗺</button>
+        <button id="btn-pause" class="hud-icon-btn" title="Pause (Esc)">⏸</button>
       </div>
     </div>
 
-    <!-- Bottom-left: minimap -->
     <div class="hud-bottom-left">
-      <canvas id="minimap" width="150" height="150"></canvas>
+      <canvas id="minimap" width="200" height="200"></canvas>
+      <div id="hud-turn" class="hud-turn">↑ 0 m</div>
+      <div id="hud-wanted" class="hud-wanted">☆☆☆☆☆</div>
+      <div id="hud-escape" class="hud-escape"><div id="hud-escape-fill" class="hud-escape-fill"></div><span>ESCAPING…</span></div>
     </div>
 
-    <!-- Center toast (warnings / pickup) -->
-    <div id="toast" class="toast hidden"></div>
+    <div class="hud-bottom-right">
+      <div class="gauge-stack">
+        <div class="gauge"><span class="gauge-label">FUEL</span><div class="gauge-bar"><div id="gauge-fuel" class="gauge-fill fuel"></div></div></div>
+        <div class="gauge"><span class="gauge-label">DMG</span><div class="gauge-bar"><div id="gauge-health" class="gauge-fill health"></div></div></div>
+        <div class="gauge"><span class="gauge-label">TEMP</span><div class="gauge-bar"><div id="gauge-temp" class="gauge-fill temp"></div></div></div>
+        <div class="gauge"><span class="gauge-label">NOS</span><div class="gauge-bar"><div id="gauge-nitro" class="gauge-fill nitro"></div></div></div>
+      </div>
+      <canvas id="speedo" width="200" height="200"></canvas>
+    </div>
+
+    <div id="hud-cam-label" class="hud-cam-label">CHASE</div>
+    <div id="hud-tc" class="hud-tc">TC</div>
+    <div id="hud-cruise" class="hud-cruise">🚗 CRUISE</div>
+    <div id="hud-prompt" class="hud-prompt"></div>
+    <div id="hud-toast" class="toast"></div>
   </div>
 
-  <!-- ───────── Mobile controls ───────── -->
+  <!-- ═══════════ Mobile / touch controls ═══════════ -->
   <div id="mobile-controls" class="mobile-controls hidden">
     <div class="mc-left">
-      <button class="mc-btn mc-steer" id="mc-left" aria-label="Steer left">◀</button>
-      <button class="mc-btn mc-steer" id="mc-right" aria-label="Steer right">▶</button>
+      <div id="mc-wheel" class="mc-wheel"><div class="mc-wheel-inner"></div></div>
     </div>
     <div class="mc-right">
-      <button class="mc-btn mc-pedal" id="mc-gas" aria-label="Accelerate">⬆</button>
-      <button class="mc-btn mc-pedal" id="mc-brake" aria-label="Brake / reverse">⬇</button>
+      <button class="mc-btn mc-pedal" id="mc-brake" aria-label="Brake">BRAKE</button>
+      <button class="mc-btn mc-pedal gas" id="mc-gas" aria-label="Accelerate">GAS</button>
     </div>
     <div class="mc-bottom">
       <button class="mc-btn mc-small" id="mc-handbrake" aria-label="Handbrake">✋</button>
-      <button class="mc-btn mc-small" id="mc-camera" aria-label="Change camera">🎥</button>
+      <button class="mc-btn mc-small nos" id="mc-nitro" aria-label="Nitro">💨</button>
       <button class="mc-btn mc-small" id="mc-horn" aria-label="Horn">📢</button>
+      <button class="mc-btn mc-small" id="mc-camera" aria-label="Camera">🎥</button>
+      <button class="mc-btn mc-small" id="mc-map" aria-label="Map">🗺</button>
     </div>
   </div>
 
-  <!-- ───────── Main menu ───────── -->
+  <!-- ═══════════ Main menu ═══════════ -->
   <div id="menu" class="overlay">
-    <div class="overlay-card">
+    <div class="overlay-card wide">
       <div class="logo-row"><span class="logo-emoji">🚗</span></div>
-      <h1 class="logo-title">CAR GAME</h1>
-      <p class="logo-sub">City Driving Simulator</p>
+      <h1 class="logo-title">NEON DRIVE</h1>
+      <p class="logo-sub">Open City · 3D Driving Simulator</p>
       <div class="menu-stats">
         <div class="menu-stat"><span class="ms-label">MONEY</span><span id="menu-money" class="ms-value">$0</span></div>
-        <div class="menu-stat"><span class="ms-label">XP</span><span id="menu-xp" class="ms-value">0</span></div>
-        <div class="menu-stat"><span class="ms-label">MISSIONS</span><span id="menu-missions" class="ms-value">0/3</span></div>
+        <div class="menu-stat"><span class="ms-label">RANK</span><span id="menu-xp" class="ms-value">LV 0</span></div>
+        <div class="menu-stat"><span class="ms-label">MISSIONS</span><span id="menu-missions" class="ms-value">0/12</span></div>
       </div>
       <div class="menu-buttons">
         <button class="menu-btn primary" data-action="continue" id="btn-continue">▶ Continue</button>
+        <button class="menu-btn" data-action="new-game" id="btn-new-game">✦ New Game</button>
         <button class="menu-btn" data-action="career">🏁 Career</button>
         <button class="menu-btn" data-action="free">🛣 Free Drive</button>
+        <button class="menu-btn" data-action="garage">🔧 Garage</button>
+        <button class="menu-btn" data-action="dealer">🏪 Dealership</button>
+        <button class="menu-btn" data-action="settings">⚙ Settings</button>
         <button class="menu-btn" data-action="controls">🎮 Controls</button>
       </div>
       <a href="/projects" class="menu-back">← Back to portfolio</a>
     </div>
   </div>
 
-  <!-- ───────── Mission select ───────── -->
+  <!-- ═══════════ Mission select ═══════════ -->
   <div id="missions-menu" class="overlay hidden">
-    <div class="overlay-card">
-      <h2 class="overlay-title">Select Mission</h2>
+    <div class="overlay-card wide">
+      <h2 class="overlay-title">Career Missions</h2>
       <div id="missions-list" class="missions-list"></div>
       <button class="menu-btn ghost" data-action="back-menu">← Back</button>
     </div>
   </div>
 
-  <!-- ───────── Controls help ───────── -->
-  <div id="controls-menu" class="overlay hidden">
+  <!-- ═══════════ Garage ═══════════ -->
+  <div id="garage-menu" class="overlay hidden">
+    <div class="overlay-card wide tall">
+      <h2 class="overlay-title">🔧 Garage</h2>
+      <div id="garage-tabs" class="garage-tabs"></div>
+      <div id="garage-body" class="garage-body"></div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Dealership ═══════════ -->
+  <div id="dealer-menu" class="overlay hidden">
+    <div class="overlay-card wide tall">
+      <h2 class="overlay-title">🏪 Axiom Motors <span id="dealer-money" class="dealer-money">$0</span></h2>
+      <div id="dealer-list" class="dealer-list"></div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Settings ═══════════ -->
+  <div id="settings-menu" class="overlay hidden">
     <div class="overlay-card">
+      <input type="hidden" id="settings-back-target" value="menu" />
+      <h2 class="overlay-title">Settings</h2>
+      <div class="settings-section">
+        <h4>Graphics</h4>
+        <div id="quality-row" class="quality-row">
+          <button data-q="low">Low</button>
+          <button data-q="medium">Medium</button>
+          <button data-q="high">High</button>
+          <button data-q="ultra">Ultra</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h4>Audio</h4>
+        <label class="slider-row">Music<input type="range" id="vol-music" min="0" max="1" step="0.05" /><button class="snd-toggle-wrap"><input type="checkbox" id="sound-toggle" class="toggle" /><span></span></button></label>
+        <label class="slider-row">Engine<input type="range" id="vol-engine" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Effects<input type="range" id="vol-fx" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Ambience<input type="range" id="vol-amb" min="0" max="1" step="0.05" /></label>
+      </div>
+      <div class="settings-section">
+        <h4>Gameplay</h4>
+        <label class="slider-row check">Manual transmission (Z / X shift)<input type="checkbox" id="trans-toggle" class="toggle" /><span></span></label>
+        <label class="slider-row check">Traction control (K to toggle)<input type="checkbox" id="tc-toggle" class="toggle" /><span></span></label>
+      </div>
+      <div class="settings-section">
+        <button id="btn-reset-save" class="menu-btn danger">Reset Save</button>
+      </div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Controls ═══════════ -->
+  <div id="controls-menu" class="overlay hidden">
+    <div class="overlay-card wide">
       <h2 class="overlay-title">Controls</h2>
       <div class="controls-grid">
         <div class="ctl"><kbd>W</kbd>/<kbd>↑</kbd><span>Accelerate</span></div>
         <div class="ctl"><kbd>S</kbd>/<kbd>↓</kbd><span>Brake / Reverse</span></div>
         <div class="ctl"><kbd>A</kbd>/<kbd>←</kbd><span>Turn left</span></div>
         <div class="ctl"><kbd>D</kbd>/<kbd>→</kbd><span>Turn right</span></div>
-        <div class="ctl"><kbd>Space</kbd><span>Handbrake</span></div>
-        <div class="ctl"><kbd>C</kbd><span>Change camera</span></div>
+        <div class="ctl"><kbd>Space</kbd><span>Handbrake / drift</span></div>
+        <div class="ctl"><kbd>Shift</kbd><span>Nitro (sprint on foot)</span></div>
+        <div class="ctl"><kbd>E</kbd>/<kbd>F</kbd><span>Enter / exit car · open garage</span></div>
+        <div class="ctl"><kbd>C</kbd><span>Camera (chase · close · hood · cockpit · cinematic)</span></div>
         <div class="ctl"><kbd>H</kbd><span>Horn</span></div>
-        <div class="ctl"><kbd>P</kbd>/<kbd>Esc</kbd><span>Pause</span></div>
-        <div class="ctl"><kbd>M</kbd><span>Mute / Unmute</span></div>
+        <div class="ctl"><kbd>M</kbd><span>Map — click to set GPS</span></div>
+        <div class="ctl"><kbd>L</kbd><span>Toggle headlights</span></div>
+        <div class="ctl"><kbd>T</kbd><span>Auto / manual gearbox</span></div>
+        <div class="ctl"><kbd>K</kbd><span>Traction control on / off</span></div>
+        <div class="ctl"><kbd>Z</kbd>/<kbd>X</kbd><span>Shift down / up (manual)</span></div>
+        <div class="ctl"><kbd>Esc</kbd>/<kbd>P</kbd><span>Pause</span></div>
+        <div class="ctl"><kbd>Click</kbd><span>Cruise control on/off</span></div>
+        <div class="ctl"><kbd>🎮</kbd><span>Gamepad: sticks + triggers supported</span></div>
       </div>
-      <p class="controls-note">📱 Touch controls appear automatically on mobile.</p>
+      <p class="controls-note">📱 Touch devices get a virtual steering wheel and pedals automatically.</p>
       <button class="menu-btn ghost" data-action="back-menu">← Back</button>
     </div>
   </div>
 
-  <!-- ───────── Pause ───────── -->
+  <!-- ═══════════ Pause ═══════════ -->
   <div id="pause-menu" class="overlay hidden">
     <div class="overlay-card">
       <h2 class="overlay-title">Paused</h2>
       <div class="menu-buttons">
         <button class="menu-btn primary" data-action="resume">▶ Resume</button>
-        <button class="menu-btn" data-action="restart">↻ Restart Mission</button>
+        <button class="menu-btn" data-action="restart">↻ Restart</button>
+        <button class="menu-btn" data-action="pause-settings">⚙ Settings</button>
         <button class="menu-btn" data-action="quit">✕ Exit to Menu</button>
       </div>
     </div>
   </div>
 
-  <!-- ───────── Mission complete ───────── -->
+  <!-- ═══════════ Mission complete ═══════════ -->
   <div id="complete-menu" class="overlay hidden">
     <div class="overlay-card">
-      <h2 class="overlay-title success">Mission Complete</h2>
-      <div id="complete-stars" class="stars">⭐⭐⭐</div>
+      <h2 class="overlay-title success" id="complete-title">Mission Complete</h2>
+      <div id="complete-stars" class="stars">★★★</div>
       <div class="reward-row">
         <div class="reward"><span id="complete-money" class="reward-value">$0</span><span class="reward-label">Money</span></div>
         <div class="reward"><span id="complete-xp" class="reward-value">0</span><span class="reward-label">XP</span></div>
       </div>
       <div class="menu-buttons">
-        <button class="menu-btn primary" data-action="next">▶ Next</button>
-        <button class="menu-btn" data-action="quit">🏠 Menu</button>
+        <button class="menu-btn primary" id="btn-next" data-action="next">▶ Next Mission</button>
+        <button class="menu-btn" data-action="replay">↻ Replay</button>
+        <button class="menu-btn" data-action="menu-return">🏠 Menu</button>
       </div>
     </div>
   </div>
 
-  <!-- ───────── Fail ───────── -->
+  <!-- ═══════════ Fail ═══════════ -->
   <div id="fail-menu" class="overlay hidden">
     <div class="overlay-card">
-      <h2 class="overlay-title fail" id="fail-title">Mission Failed</h2>
+      <h2 class="overlay-title fail">Mission Failed</h2>
       <p id="fail-reason" class="fail-reason">—</p>
       <div class="menu-buttons">
         <button class="menu-btn primary" data-action="restart">↻ Retry</button>
-        <button class="menu-btn" data-action="quit">🏠 Menu</button>
+        <button class="menu-btn" data-action="menu-return">🏠 Menu</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ Fullscreen map ═══════════ -->
+  <div id="map-overlay" class="map-overlay hidden">
+    <div class="map-panel">
+      <div class="map-head">
+        <h3>🗺 City Map</h3>
+        <span class="map-hint">Click anywhere on a road to set a GPS destination · <kbd>M</kbd> to close</span>
+      </div>
+      <canvas id="map-canvas"></canvas>
     </div>
   </div>
 
   <!-- Loading -->
   <div id="loader" class="loader">
     <div class="loader-spinner"></div>
-    <span>Loading city…</span>
+    <span>Building the city…</span>
   </div>
 
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     }
   }
   </script>
