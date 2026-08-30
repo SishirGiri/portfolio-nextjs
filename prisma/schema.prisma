@@ -1,0 +1,297 @@
+// ════════════════════════════════════════════════════════
+// NEON DRIVE — database schema (PostgreSQL via Prisma)
+//
+// Layering (see docs/neon-drive/03-DATABASE.md):
+//   API route → Service → Repository → Prisma → PostgreSQL
+// Game components never touch the database directly; the
+// client keeps a local-first save and syncs through
+//   PUT /api/game/save.
+// ════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Identity ──────────────────────────────────────────────
+// Guests are created silently for every player; registering
+// upgrades the same row so progress carries over.
+enum Role {
+  PLAYER
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id              String    @id @default(uuid())
+  username        String?   @unique
+  passwordHash    String?                // scrypt — never plaintext
+  isGuest         Boolean   @default(true)
+  role            Role      @default(PLAYER)
+  tokenVersion    Int       @default(0)  // bump to revoke all session tokens
+  disabled        Boolean   @default(false)
+  email           String?   @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+
+  profile      PlayerProfile?
+  save         GameSave?
+  stats        PlayerStats?
+  vehicles     OwnedVehicle[]
+  missions     MissionProgress[]
+  achievements Achievement[]
+  scores       LeaderboardEntry[]
+
+  // social
+  friendshipsA          Friendship[]          @relation("FriendshipA")
+  friendshipsB          Friendship[]          @relation("FriendshipB")
+  friendRequestsSent     FriendRequest[]      @relation("FriendRequestFrom")
+  friendRequestsReceived FriendRequest[]      @relation("FriendRequestTo")
+  notifications          Notification[]
+
+  // platform
+  auditLogs   AuditLog[]
+  flaggedRuns FlaggedRun[]
+  matches     MatchParticipant[]
+  analytics   AnalyticsEvent[]
+
+  @@index([isGuest])
+  @@index([role])
+}
+
+model PlayerProfile {
+  userId      String   @id
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  avatar      String   @default("car")     // preset id from the game
+  level       Int      @default(0)
+  xp          Int      @default(0)
+  money       Int      @default(0)
+  currentCar  String   @default("toro")
+  careerScore Int      @default(0)   // sum of personal-best mission scores
+  updatedAt   DateTime @updatedAt
+
+  @@index([careerScore(sort: Desc)])   // overall leaderboard
+}
+
+// ── Persistence ───────────────────────────────────────────
+model GameSave {
+  userId   String   @id
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revision Int      @default(1)       // sync conflict detection
+  data     Json                      // sanitized v3 save blob
+  updatedAt DateTime @updatedAt
+}
+
+model PlayerStats {
+  userId            String   @id
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  distanceM         Float    @default(0)
+  playtimeSec       Float    @default(0)
+  missionsCompleted Int      @default(0)
+  missionsFailed    Int      @default(0)
+  collisions        Int      @default(0)
+  busts             Int      @default(0)
+  escapes           Int      @default(0)
+  topSpeedKmh       Float    @default(0)
+  moneyEarned       Int      @default(0)
+  moneySpent        Int      @default(0)
+  updatedAt         DateTime @updatedAt
+}
+
+// ── Inventory / progression ───────────────────────────────
+model OwnedVehicle {
+  id       Int    @id @default(autoincrement())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  carId    String                       // id from vehicles.json
+  paint    String @default("#f5b301")
+  spoiler  Int    @default(0)
+  wheels   Int    @default(0)
+  caliper  Int    @default(0)
+  kit      Int    @default(0)
+  exhaust  Int    @default(0)
+  upgrades Json   @default("{}")        // { engine: 0-3, ... }
+
+  @@unique([userId, carId])
+  @@index([userId])
+}
+
+model MissionProgress {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId   String                          // id from missions.json
+  stars       Int      @default(1)
+  bestTimeMs  Int?
+  completions Int      @default(1)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, missionId])
+  @@index([userId])
+}
+
+model Achievement {
+  id            Int      @id @default(autoincrement())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+// ── Leaderboards ──────────────────────────────────────────
+// Scores are computed SERVER-SIDE from mission results —
+// clients never submit a score value.
+model LeaderboardEntry {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId String
+  score     Int
+  timeMs    Int
+  stars     Int      @default(3)
+  level     Int      @default(0)
+  vehicleId String
+  distanceM Float    @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([missionId, score(sort: Desc)])
+  @@index([missionId, createdAt, score(sort: Desc)])
+  @@index([userId, createdAt])
+}
+
+// ── Social graph ──────────────────────────────────────────
+// One row per friendship, pair stored with userAId < userBId
+// so lookups are two indexed probes and duplicates impossible.
+model Friendship {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+
+  userA User @relation("FriendshipA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("FriendshipB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+}
+
+model FriendRequest {
+  id        String   @id @default(uuid())
+  fromId    String
+  toId      String
+  status    String   @default("pending")   // pending | accepted | rejected | cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  from User @relation("FriendRequestFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to   User @relation("FriendRequestTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@index([toId, status])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String                  // friend_request | match_result | achievement | admin | system
+  title     String
+  body      String    @default("")
+  data      Json      @default("{}")
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+}
+
+// ── Platform integrity ────────────────────────────────────
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    String?               // admin who acted; null = system
+  action     String                // e.g. flag.actioned | account.disabled | role.changed
+  targetType String                // user | run | match | system
+  targetId   String?
+  data       Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+}
+
+// Anti-cheat findings surfaced for admin review. No automatic
+// bans — humans action flags (see 06-SECURITY.md).
+model FlaggedRun {
+  id         String    @id @default(uuid())
+  userId     String
+  reason     String                  // earn_rate | hostile_save | impossible_run | ...
+  severity   String    @default("low")   // low | medium | high
+  status     String    @default("open")  // open | dismissed | actioned
+  data       Json      @default("{}")
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  reviewedBy String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+// ── Multiplayer ───────────────────────────────────────────
+// Server-authoritative match results (ghost races).
+model MatchRecord {
+  id        String    @id @default(uuid())
+  mode      String    @default("ghost-race")
+  missionId String
+  seed      Int
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  participants MatchParticipant[]
+
+  @@index([startedAt(sort: Desc)])
+}
+
+model MatchParticipant {
+  id       String  @id @default(uuid())
+  matchId  String
+  userId   String
+  position Int                 // 1-based finish placement
+  score    Int      @default(0)
+  finishMs Int?                 // null = did not finish
+  carId    String   @default("toro")
+
+  match MatchRecord @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@index([userId])
+}
+
+// ── Analytics ─────────────────────────────────────────────
+// Privacy: ids + event names only, never payloads of personal
+// data. See 06-SECURITY.md for the retention policy.
+model AnalyticsEvent {
+  id        Int      @id @default(autoincrement())
+  userId    String?
+  name      String               // session_start | mission_complete | mp_match_start | ...
+  props     Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([name, createdAt])
+  @@index([userId, createdAt])
+}

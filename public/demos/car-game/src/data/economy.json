@@ -1,0 +1,12 @@
+{
+  "repairCostPerHp": 3,
+  "bustedFinePerStar": 200,
+  "taxiFareBase": 90,
+  "vipBase": 260,
+  "cleanBonus": 60,
+  "starBonus": 120,
+  "levelCoefficient": 120,
+  "startMoney": 500,
+  "missionBase": 150,
+  "xpBase": 110
+}

@@ -8,7 +8,7 @@ const isInternal = (url: string) => url.startsWith("/");
 export default function ProjectHero({ project }: { project: Project }) {
   const hasDemo = project.demoUrl && project.demoUrl !== "#";
   const internal = hasDemo && isInternal(project.demoUrl);
-  const demoLabel = project.slug === "3d-portfolio" ? "Live Website" : "Live Demo";
+  const demoLabel = project.websiteUrl ? "Live Website" : "Live Demo";
 
   return (
     <section className="pp-hero">

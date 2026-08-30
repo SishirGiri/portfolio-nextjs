@@ -1,0 +1,101 @@
+[
+  {
+    "id": "first-mission",
+    "name": "First Gear",
+    "icon": "🚗",
+    "desc": "Complete your first mission.",
+    "rarity": "common",
+    "xpReward": 50,
+    "metric": { "kind": "missionsCompleted", "target": 1 }
+  },
+  {
+    "id": "halfway",
+    "name": "Halfway There",
+    "icon": "🏁",
+    "desc": "Complete 7 career missions.",
+    "rarity": "common",
+    "xpReward": 150,
+    "metric": { "kind": "careerCompleted", "target": 7 }
+  },
+  {
+    "id": "completionist",
+    "name": "Completionist",
+    "icon": "👑",
+    "desc": "Complete every career mission.",
+    "rarity": "legendary",
+    "xpReward": 1000,
+    "metric": { "kind": "careerCompleted", "target": "all" }
+  },
+  {
+    "id": "level-5",
+    "name": "Street Smart",
+    "icon": "⬆️",
+    "desc": "Reach level 5.",
+    "rarity": "common",
+    "xpReward": 100,
+    "metric": { "kind": "level", "target": 5 }
+  },
+  {
+    "id": "level-10",
+    "name": "City Legend",
+    "icon": "🌟",
+    "desc": "Reach level 10.",
+    "rarity": "rare",
+    "xpReward": 300,
+    "metric": { "kind": "level", "target": 10 }
+  },
+  {
+    "id": "garage-3",
+    "name": "Small Fleet",
+    "icon": "🔧",
+    "desc": "Own 3 vehicles.",
+    "rarity": "common",
+    "xpReward": 100,
+    "metric": { "kind": "vehicles", "target": 3 }
+  },
+  {
+    "id": "collector",
+    "name": "The Collector",
+    "icon": "🏪",
+    "desc": "Own every vehicle in the catalog.",
+    "rarity": "epic",
+    "xpReward": 500,
+    "metric": { "kind": "vehicles", "target": "all" }
+  },
+  {
+    "id": "road-tripper",
+    "name": "Road Tripper",
+    "icon": "🛣️",
+    "desc": "Drive 100 km in total.",
+    "rarity": "rare",
+    "xpReward": 200,
+    "metric": { "kind": "distanceKm", "target": 100 }
+  },
+  {
+    "id": "marathoner",
+    "name": "Marathoner",
+    "icon": "🗺️",
+    "desc": "Finish the City Marathon.",
+    "rarity": "epic",
+    "xpReward": 400,
+    "metric": { "kind": "missionCompleted", "missionId": "city-marathon" }
+  },
+  {
+    "id": "high-roller",
+    "name": "High Roller",
+    "icon": "💵",
+    "desc": "Earn $100,000 in total.",
+    "rarity": "rare",
+    "xpReward": 250,
+    "metric": { "kind": "moneyEarned", "target": 100000 }
+  },
+  {
+    "id": "untouchable",
+    "name": "Untouchable",
+    "icon": "🚓",
+    "desc": "Escape the police 5 times.",
+    "rarity": "epic",
+    "xpReward": 350,
+    "metric": { "kind": "escapes", "target": 5 }
+  }
+]

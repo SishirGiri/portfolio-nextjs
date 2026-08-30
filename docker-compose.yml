@@ -1,0 +1,83 @@
+# Neon Drive platform — full local stack.
+#   docker compose up -d             → infra only (db + redis)
+#   docker compose --profile app up -d --build → whole platform
+#   docker compose down              → stop (add -v to wipe data)
+# First run: npm run db:migrate (or db:baseline on a pushed DB)
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: neondrive-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: neon
+      POSTGRES_PASSWORD: neon
+      POSTGRES_DB: neondrive
+    ports:
+      - "5432:5432"
+    volumes:
+      - neondrive_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neon -d neondrive"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Shared cache / rate limits / matchmaking queue / pub-sub.
+  # Without it the platform silently falls back to in-process
+  # adapters (single-instance dev + tests need no Redis).
+  redis:
+    image: redis:7-alpine
+    container_name: neondrive-redis
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - neondrive_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── application profile (docker compose --profile app up) ──
+  web:
+    profiles: ["app"]
+    build: .
+    container_name: neondrive-web
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://neon:neon@db:5432/neondrive
+      REDIS_URL: redis://redis:6379
+      GAME_AUTH_SECRET: ${GAME_AUTH_SECRET:-dev-secret-change-me}
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret-change-me}
+      REALTIME_HEALTH_URL: http://realtime:3001/health
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  realtime:
+    profiles: ["app"]
+    build: ./realtime
+    container_name: neondrive-realtime
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://neon:neon@db:5432/neondrive
+      REDIS_URL: redis://redis:6379
+      GAME_AUTH_SECRET: ${GAME_AUTH_SECRET:-dev-secret-change-me}
+      REALTIME_PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  neondrive_pgdata:
+  neondrive_redisdata:

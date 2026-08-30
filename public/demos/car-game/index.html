@@ -93,13 +93,22 @@
         <div class="menu-stat"><span class="ms-label">RANK</span><span id="menu-xp" class="ms-value">LV 0</span></div>
         <div class="menu-stat"><span class="ms-label">MISSIONS</span><span id="menu-missions" class="ms-value">0/12</span></div>
       </div>
+      <div class="menu-account">
+        <span id="sync-dot" class="sync-dot" data-status="idle" title="Cloud sync"></span>
+        <button class="account-chip" data-action="account" id="account-chip">👤 Offline</button>
+      </div>
       <div class="menu-buttons">
         <button class="menu-btn primary" data-action="continue" id="btn-continue">▶ Continue</button>
         <button class="menu-btn" data-action="new-game" id="btn-new-game">✦ New Game</button>
         <button class="menu-btn" data-action="career">🏁 Career</button>
         <button class="menu-btn" data-action="free">🛣 Free Drive</button>
+        <button class="menu-btn" data-action="multiplayer">⚔ Multiplayer</button>
+        <button class="menu-btn" data-action="friends">👥 Friends</button>
+        <button class="menu-btn" data-action="coach">🎯 Driving Coach</button>
+        <button class="menu-btn hidden" data-action="admin">🛡 Admin</button>
         <button class="menu-btn" data-action="garage">🔧 Garage</button>
         <button class="menu-btn" data-action="dealer">🏪 Dealership</button>
+        <button class="menu-btn" data-action="leaderboard">🏆 Leaderboard</button>
         <button class="menu-btn" data-action="settings">⚙ Settings</button>
         <button class="menu-btn" data-action="controls">🎮 Controls</button>
       </div>
@@ -151,10 +160,14 @@
       </div>
       <div class="settings-section">
         <h4>Audio</h4>
-        <label class="slider-row">Music<input type="range" id="vol-music" min="0" max="1" step="0.05" /><button class="snd-toggle-wrap"><input type="checkbox" id="sound-toggle" class="toggle" /><span></span></button></label>
+        <label class="slider-row">Master<input type="range" id="vol-master" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Music<input type="range" id="vol-music" min="0" max="1" step="0.05" /></label>
         <label class="slider-row">Engine<input type="range" id="vol-engine" min="0" max="1" step="0.05" /></label>
-        <label class="slider-row">Effects<input type="range" id="vol-fx" min="0" max="1" step="0.05" /></label>
-        <label class="slider-row">Ambience<input type="range" id="vol-amb" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Effects<input type="range" id="vol-sfx" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Environment<input type="range" id="vol-env" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Interface<input type="range" id="vol-ui" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row">Voice<input type="range" id="vol-voice" min="0" max="1" step="0.05" /></label>
+        <label class="slider-row check">Mute All<input type="checkbox" id="sound-toggle" class="toggle" /><span></span></label>
       </div>
       <div class="settings-section">
         <h4>Gameplay</h4>
@@ -164,6 +177,95 @@
       <div class="settings-section">
         <button id="btn-reset-save" class="menu-btn danger">Reset Save</button>
       </div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Multiplayer ═══════════ -->
+  <div id="mp-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title">⚔ Multiplayer — Ghost Races</h2>
+      <p class="mp-blurb">Get matched with drivers near your level and race the same
+        route in real time. Server-authoritative results feed the rankings.</p>
+      <div id="mp-status" class="mp-status">⚪ Realtime offline</div>
+      <button id="btn-mp-queue" class="menu-btn primary" data-action="mp-queue">⚔ Find a Race</button>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Friends ═══════════ -->
+  <div id="friends-menu" class="overlay hidden">
+    <div class="overlay-card wide">
+      <h2 class="overlay-title">👥 Friends</h2>
+      <input id="friend-search" class="acct-input" placeholder="Search players (2+ chars)…" maxlength="24" />
+      <div id="friend-results" class="friends-list"></div>
+      <h4>Requests</h4>
+      <div id="friends-requests" class="friends-list"></div>
+      <h4>Your crew</h4>
+      <div id="friends-list" class="friends-list"></div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ AI Driving Coach ═══════════ -->
+  <div id="coach-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title">🎯 AI Driving Coach</h2>
+      <div id="coach-focus" class="coach-focus"></div>
+      <div id="coach-insights" class="coach-list"></div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Admin (RBAC-gated) ═══════════ -->
+  <div id="admin-menu" class="overlay hidden">
+    <div class="overlay-card wide tall panel">
+      <h2 class="overlay-title">🛡 Admin</h2>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Leaderboard ═══════════ -->
+  <div id="leaderboard-menu" class="overlay hidden">
+    <div class="overlay-card wide tall">
+      <h2 class="overlay-title">🏆 Leaderboard</h2>
+      <div class="lb-controls">
+        <select id="lb-scope" class="lb-scope" aria-label="Leaderboard category"></select>
+        <div id="lb-periods" class="lb-periods">
+          <button data-period="all" class="active">All time</button>
+          <button data-period="week">This week</button>
+          <button data-period="day">Today</button>
+        </div>
+      </div>
+      <div class="lb-row lb-heading">
+        <span class="lb-rank">#</span><span class="lb-name">Player</span>
+        <span class="lb-vehicle">Vehicle</span><span class="lb-score">Score</span><span class="lb-time">Time</span>
+      </div>
+      <div id="lb-list" class="lb-list"></div>
+      <button class="menu-btn ghost" data-action="back-menu">← Back</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Account ═══════════ -->
+  <div id="account-menu" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 class="overlay-title">👤 Account</h2>
+      <div id="acct-info" class="acct-info hidden"></div>
+      <div id="acct-forms" class="acct-forms">
+        <p class="acct-note">You are playing as a <b>guest</b> — progress is saved on this device.
+          Create a free account to sync it to the cloud and appear on the leaderboards by name.
+          Your current progress carries over.</p>
+        <h4>Sign in</h4>
+        <input id="acct-login-user" class="acct-input" placeholder="Username" autocomplete="username" maxlength="24" />
+        <input id="acct-login-pass" class="acct-input" type="password" placeholder="Password" autocomplete="current-password" />
+        <button id="acct-login-btn" class="menu-btn primary">Sign in</button>
+        <h4>Create account</h4>
+        <input id="acct-reg-user" class="acct-input" placeholder="Username" autocomplete="username" maxlength="24" />
+        <input id="acct-reg-pass" class="acct-input" type="password" placeholder="Password (6+ chars)" autocomplete="new-password" />
+        <button id="acct-reg-btn" class="menu-btn">Create account</button>
+        <div id="acct-status" class="acct-status" role="alert"></div>
+      </div>
+      <button id="acct-logout-btn" class="menu-btn danger hidden">Sign out</button>
       <button class="menu-btn ghost" data-action="back-menu">← Back</button>
     </div>
   </div>

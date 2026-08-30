@@ -1,0 +1,47 @@
+{
+  "upgrades": {
+    "engine":       { "name": "Engine",       "icon": "⚙️", "costs": [800, 1600, 3200],  "topSpeed": 0.04, "accel": 0.07 },
+    "brakes":       { "name": "Brakes",       "icon": "🛑", "costs": [500, 1000, 2000],  "brake": 0.09 },
+    "suspension":   { "name": "Suspension",   "icon": "🪛", "costs": [500, 1000, 2000],  "steer": 0.08, "stability": 0.1 },
+    "tires":        { "name": "Tires",        "icon": "🛞", "costs": [600, 1200, 2400],  "grip": 0.04 },
+    "nitro":        { "name": "Nitro",        "icon": "💨", "costs": [700, 1400, 2800],  "nitroCap": 30, "boost": 0.08 },
+    "transmission": { "name": "Transmission", "icon": "🔧", "costs": [900, 1800, 3600],  "accel": 0.05, "steer": 0.03 }
+  },
+  "paints": [
+    { "name": "Giallo Orion",      "hex": "#f5b301", "metal": 0.75, "rough": 0.22 },
+    { "name": "Arancio Borealis",  "hex": "#f56a00", "metal": 0.7,  "rough": 0.25 },
+    { "name": "Rosso Mars",        "hex": "#c81e2e", "metal": 0.65, "rough": 0.28 },
+    { "name": "Verde Selvans",     "hex": "#1fae5e", "metal": 0.7,  "rough": 0.25 },
+    { "name": "Blu Glauco",        "hex": "#1d6fc2", "metal": 0.7,  "rough": 0.24 },
+    { "name": "Viola Pasifae",     "hex": "#6d3fd4", "metal": 0.72, "rough": 0.24 },
+    { "name": "Nemesis Black",     "hex": "#15181d", "metal": 0.85, "rough": 0.3 },
+    { "name": "Grigio Telesto",    "hex": "#6b7280", "metal": 0.85, "rough": 0.3 },
+    { "name": "Bianco Icarus",     "hex": "#eef2f7", "metal": 0.5,  "rough": 0.32 },
+    { "name": "Cyber Cyan",        "hex": "#00d4ff", "metal": 0.7,  "rough": 0.22 }
+  ],
+  "spoilers": [
+    { "name": "None",        "price": 0 },
+    { "name": "Lip Spoiler", "price": 250 },
+    { "name": "GT Wing",     "price": 600 }
+  ],
+  "wheels": [
+    { "name": "Silver Sport", "price": 0,   "rim": "#c9d2dd", "spokes": 5 },
+    { "name": "Black Forged", "price": 400, "rim": "#23262c", "spokes": 5 },
+    { "name": "Gold Race",    "price": 800, "rim": "#d4a53a", "spokes": 6 }
+  ],
+  "calipers": [
+    { "name": "Yellow", "price": 0,   "hex": "#f5c518" },
+    { "name": "Red",    "price": 150, "hex": "#e23b3b" },
+    { "name": "Black",  "price": 150, "hex": "#1c1f24" },
+    { "name": "Blue",   "price": 150, "hex": "#2f6fd0" }
+  ],
+  "bodyKits": [
+    { "name": "Stock",      "price": 0 },
+    { "name": "Street Kit", "price": 500 }
+  ],
+  "exhausts": [
+    { "name": "Twin Tips",    "price": 0 },
+    { "name": "Quad Sport",   "price": 350 },
+    { "name": "Titanium Blue", "price": 700 }
+  ]
+}

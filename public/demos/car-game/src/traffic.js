@@ -325,7 +325,7 @@ export class Traffic {
           c.honkT -= dt;
           if (c.honkT <= 0) {
             c.honkT = rand(4, 8);
-            if (this.onHonk) this.onHonk(Math.hypot(p.x - playerPos.x, p.z - playerPos.z));
+            if (this.onHonk) this.onHonk(Math.hypot(p.x - playerPos.x, p.z - playerPos.z), p.x, p.z, c.style);
           }
         }
       }

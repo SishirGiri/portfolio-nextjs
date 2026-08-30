@@ -3,15 +3,22 @@
 // fuel/temps, police integration, day/night + weather, rain
 // particles, particles (smoke/sparks), 5 cameras, HUD
 // (speedo canvas, gauges, minimap, wanted, prompts), audio
-// glue, save/load + v1 migration, mission flow.
+// glue, mission flow. Progress changes go through SaveService
+// (which emits events for the sync service + UI).
 // ════════════════════════════════════════════════════════
 import * as THREE from 'three';
 import {
   CAR_BY_ID, CAMERA, COLORS, ECONOMY, MISSIONS, QUALITY_PRESETS,
-  SAVE_KEY, SAVE_KEY_V1, STATS, TIME, WEATHER_PHASES, WORLD,
-  defaultSave,
+  STATS, TIME, WEATHER_PHASES, WORLD,
 } from './config.js';
-import { buildCharacter } from './vehicles.js';
+import { buildCharacter, PlayerCar } from './vehicles.js';
+import { CARS } from './data/cars.js';
+import { EventBus } from './core/EventBus.js';
+import { GameState, State } from './core/GameState.js';
+import { GameLoop } from './core/GameLoop.js';
+import { EVENTS } from './core/events.js';
+import { SaveService } from './services/SaveService.js';
+import { createBrowserStorage } from './services/storage.js';
 import {
   clamp, lerp, damp, rand, circleAABB, fmtTime, fmtClock, fmtMoney, normAngle,
 } from './utils.js';
@@ -19,15 +26,37 @@ import {
 const CAM_MODES = ['chase', 'close', 'hood', 'cockpit', 'cine'];
 
 export class Game {
-  constructor(canvas) {
+  /**
+   * @param {HTMLCanvasElement} canvas
+   * @param {{bus?: EventBus, saves?: SaveService, leaderboard?: object}} services
+   */
+  constructor(canvas, services = {}) {
     this.canvas = canvas;
     this.running = false;
     this.paused = false;
     this.mapOpen = false;
-    this.mode = 'menu';            // menu | play | free | paused
+    this.mode = 'menu';            // menu | play | free | paused (legacy; state machine is authoritative)
     this.cameraMode = 0;
     this.onFoot = false;
     this.cruise = false;
+
+    // architecture: shared event bus, state machine, save service
+    this.bus = services.bus || new EventBus();
+    this.saves = services.saves || new SaveService(this.bus, createBrowserStorage());
+    this.leaderboard = services.leaderboard || null;
+    this.mp = services.multiplayer || null;         // ghost-race client (optional)
+    this._remoteCars = new Map();                   // userId → PlayerCar ghost
+    this.state = new GameState((next) => {
+      if (next === State.GAMEPLAY) this.mode = this.missions?.active ? 'play' : 'free';
+      else if (next === State.PAUSED) this.mode = 'paused';
+      else if (next !== State.RESULTS) this.mode = 'menu';
+    });
+    this.saves.load();
+
+    // per-session telemetry (merged into save.stats on persist)
+    this.session = { distanceM: 0, timeSec: 0, topSpeedKmh: 0, escapes: 0 };
+    this._missionDistance = 0;
+    this._prevStars = 0;
 
     this.fuel = 100;
     this.dayTime = TIME.startHour / 24;
@@ -50,9 +79,20 @@ export class Game {
       onPrompt: () => {}, onPause: () => {}, onMap: () => {}, onToast: () => {},
       onLevelUp: () => {}, onRoamDone: () => {},
     };
-    this.save = this._loadSave();
-    this._loop = this._loop.bind(this);
+
+    // frame loop (guard preserves the legacy pause semantics)
+    this.loop = new GameLoop((dt) => {
+      if (!this.running || this.paused) { this.loop.stop(); return; }
+      this._update(dt);
+    }, () => this._render());
   }
+
+  /** Save access always points at the live, sanitized save. */
+  get save() { return this.saves.save; }
+  set save(v) { this.saves.save = v; }
+
+  /** Legacy alias used by older UI code paths. */
+  _loadSave() { return this.saves.load(); }
 
   init(ctx) {
     this.scene = ctx.scene;
@@ -122,12 +162,13 @@ export class Game {
       this.police.addHeat(130);
       this.toast('⚠️ You hit a pedestrian!', 'warn');
     };
-    this.traffic.onHonk = (dist) => this.audio.aiHorn(dist);
+    this.traffic.onHonk = (dist, x, z, style) => this.audio.aiHorn(x, z, dist, style);
     this.police.onBusted = () => this._busted();
     this.car.onLand = (impact) => {
       if (impact < 3) return;
       this._shake = Math.min(0.7, impact / 14);
-      this.audio.crash(clamp(impact / 26, 0.15, 0.6));
+      this.audio.landing(impact, this.car.pos.x, this.car.pos.z);
+      if (impact > 8) this.audio.crashAt(clamp(impact / 26, 0.15, 0.6), this.car.pos.x, this.car.pos.z);
       for (let k = 0; k < 6; k++) {
         this.spawnParticle(this.car.pos.x + rand(-1, 1), 0.3, this.car.pos.z + rand(-1, 1),
           0x9aa5b5, { life: 0.5, size: 1, grow: 2, vy: rand(1, 3) });
@@ -160,61 +201,32 @@ export class Game {
   }
 
   // ───────── save / load ─────────
-  _loadSave() {
-    let s = null;
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (raw) s = JSON.parse(raw);
-    } catch {}
-    if (s && s.v === 2) {
-      this._grantToro(s);
-      return s;
-    }
-    // migrate v1
-    try {
-      const raw1 = localStorage.getItem(SAVE_KEY_V1);
-      if (raw1) {
-        const old = JSON.parse(raw1);
-        const d = defaultSave();
-        d.money = Math.max(0, (old.money || 0) + 500);
-        d.xp = old.xp || 0;
-        for (const id of (old.completedMissions || [])) d.completed[id] = { stars: 1, bestTime: null };
-        d.settings.sound = old.sound !== false;
-        this._grantToro(d, true);
-        return d;
-      }
-    } catch {}
-    return defaultSave();
-  }
-
-  /**
-   * Ensure the Toro SV hero car exists. Any player who doesn't own it yet
-   * (v1 save or pre-Toro v2) gets it granted, keeps the old Corsa starter,
-   * and — if they were still driving that starter — is switched into the Toro.
-   */
-  _grantToro(s, legacy = false) {
-    s.ownedCars = s.ownedCars || {};
-    if (legacy && !s.ownedCars.corsa) {
-      s.ownedCars.corsa = { upgrades: {}, paint: '#e11d48', spoiler: 0 };
-    }
-    if (s.ownedCars.toro) return;
-    s.ownedCars.toro = { upgrades: {}, paint: '#f5b301', spoiler: 0, wheels: 0, caliper: 0, kit: 0, exhaust: 0 };
-    if (!s.ownedCars.corsa) {
-      s.ownedCars.corsa = { upgrades: {}, paint: '#e11d48', spoiler: 0 };
-    }
-    if (!s.ownedCars[s.currentCar] || s.currentCar === 'corsa') s.currentCar = 'toro';
-  }
+  // Loading, migration and corrupt-save recovery live in
+  // services/SaveService.js; the old _loadSave/_grantToro
+  // logic moved there unchanged.
 
   persist() {
     // remember where the player parked so Free Drive can resume there
-    if (this.running && !this.onFoot) {
-      this.save.pos = {
-        x: Math.round(this.car.pos.x * 10) / 10,
-        z: Math.round(this.car.pos.z * 10) / 10,
-        h: Math.round(this.car.heading * 100) / 100,
-      };
-    }
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.save)); } catch {}
+    const patchPos = this.running && !this.onFoot;
+    const pos = patchPos ? {
+      x: Math.round(this.car.pos.x * 10) / 10,
+      z: Math.round(this.car.pos.z * 10) / 10,
+      h: Math.round(this.car.heading * 100) / 100,
+    } : null;
+    this.saves.mutate((s) => {
+      if (pos) s.pos = pos;
+      this._mergeSessionStats(s);
+    }, 'autosave');
+  }
+
+  /** Fold per-session telemetry into the persistent stats block. */
+  _mergeSessionStats(s) {
+    s.stats = s.stats || {};
+    s.stats.distanceM = (s.stats.distanceM || 0) + this.session.distanceM;
+    s.stats.playtimeSec = (s.stats.playtimeSec || 0) + this.session.timeSec;
+    s.stats.topSpeedKmh = Math.max(s.stats.topSpeedKmh || 0, this.session.topSpeedKmh);
+    s.stats.escapes = (s.stats.escapes || 0) + this.session.escapes;
+    this.session = { distanceM: 0, timeSec: 0, topSpeedKmh: 0, escapes: 0 };
   }
 
   get level() { return ECONOMY.levelFromXp(this.save.xp); }
@@ -297,6 +309,7 @@ export class Game {
   // ───────── flow ─────────
   startPlay(missionId = null, opts = {}) {
     this.mode = missionId ? 'play' : 'free';
+    if (this.state.current !== State.GAMEPLAY) this.state.set(State.GAMEPLAY);
     this.onFoot = false;
     this.cruise = false;
     this.character.visible = false;
@@ -305,6 +318,7 @@ export class Game {
     this.traffic.clearAll();
     this.peds.spawnAll();
     this._clearRoamMarkers();
+    this._missionDistance = 0;
 
     // restore player's saved car (in case a delivery mission swapped it)
     this._applySavedCar();
@@ -347,8 +361,20 @@ export class Game {
     this.paused = false;
     this.mapOpen = false;
     this.lastTime = performance.now();
+
+    // ── audio: engine profile for the car we're actually driving,
+    //    ignition sequence, gameplay music, mission sting ──
+    const drivenDef = this.missions.forceCar ? CAR_BY_ID[this.missions.forceCar]
+      : CAR_BY_ID[this.save.currentCar] || CAR_BY_ID.corsa;
+    this.audio.setCarProfile(drivenDef, this.save.ownedCars[this.save.currentCar]?.upgrades);
+    this.audio.engineStart();
     this.audio.music(true);
-    requestAnimationFrame(this._loop);
+    this.audio.mgr.warm(['crash.medium', 'crash.heavy', 'tire.skid', 'tire.drift', 'siren.wail', 'mission.checkpoint']);
+    if (missionId) this.audio.missionStart();
+
+    this.loop.start();
+    this.bus.emit(EVENTS.GAME_STARTED, { missionId, free: !missionId });
+    if (missionId) this.bus.emit(EVENTS.MISSION_STARTED, { missionId });
   }
 
   pause() {
@@ -357,9 +383,13 @@ export class Game {
     this.paused = true;
     this._prevMode = this.mode;
     this.mode = 'paused';
+    this.state.set(State.PAUSED);
     this.ui.onPause(true);
-    this.audio.engineOff();
+    this.bus.emit(EVENTS.GAME_PAUSED, {});
+    this.audio.engineSuspend();
     this.audio.siren(false);
+    this.audio.pauseMusic();
+    this.audio.setScrape(0);
   }
 
   resume() {
@@ -367,13 +397,18 @@ export class Game {
     if (this.mapOpen) this.toggleMap();
     this.paused = false;
     this.mode = this._prevMode || 'free';
+    this.state.set(State.GAMEPLAY);
     this.ui.onPause(false);
+    this.bus.emit(EVENTS.GAME_RESUMED, {});
     this.lastTime = performance.now();
-    requestAnimationFrame(this._loop);
+    this.audio.engineResume();
+    this.audio.resumeMusic();
+    this.loop.start();
   }
 
   stop() {
     this.running = false;
+    this.loop.stop();
     this.input.unbind();
     this.missions.clear();
     this.navmap.clearRoute();
@@ -381,11 +416,12 @@ export class Game {
     this.traffic.clearAll();
     this.peds.clearAll();
     this._clearRoamMarkers();
-    this.audio.music(false);
-    this.audio.engineOff();
-    this.audio.siren(false);
-    this.audio.skid(0); this.audio.wind(0); this.audio.rain(0);
+    this.mp?.leaveMatch();
+    this.clearMultiplayer();
+    this.audio.stopAll();
     this.hud.wrap.classList.add('hidden');
+    if (this.state.current !== State.MENU) this.state.set(State.MENU);
+    this.bus.emit(EVENTS.GAME_STOPPED, {});
   }
 
   // ───────── free-roam event markers ─────────
@@ -439,6 +475,7 @@ export class Game {
   _startRoam(e) {
     this.startPlay(e.poi.type, { keepPosition: true });
     this.toast(`${e.poi.name} — GO!`, 'good', 2.5);
+    this.audio.missionStart();
     this.audio.checkpoint();
   }
 
@@ -449,15 +486,7 @@ export class Game {
     this.toastTimer = dur;
   }
 
-  // ───────── main loop ─────────
-  _loop(now) {
-    if (!this.running || this.paused) return;
-    const dt = Math.min(0.05, (now - this.lastTime) / 1000);
-    this.lastTime = now;
-    this._update(dt);
-    this._render();
-    requestAnimationFrame(this._loop);
-  }
+  // ───────── main loop (owned by core/GameLoop.js) ─────────
 
   _render() {
     this.renderer.render(this.scene, this.camera);
@@ -471,6 +500,17 @@ export class Game {
     else this._updateCar(dt);
     this._dropSkids(dt);
     this._updateSkids(dt);
+
+    // session telemetry (persisted into save.stats)
+    this.session.timeSec += dt;
+    if (!this.onFoot) {
+      const v = Math.abs(this.car.speedF);
+      this.session.distanceM += v * dt;
+      this._missionDistance += v * dt;
+      this.session.topSpeedKmh = Math.max(this.session.topSpeedKmh, v * 3.6);
+    }
+    if (this._prevStars > 0 && this.police.stars === 0) this.session.escapes += 1;
+    this._prevStars = this.police.stars;
 
     this._collisions(dt);
     this._zones(dt);
@@ -489,9 +529,68 @@ export class Game {
     this._updateCamera(dt);
     this._updateHUD(dt);
     this._updateAudio(dt);
+    this._updateMultiplayer(dt);
 
     this.saveTimer += dt;
     if (this.saveTimer > 12) { this.saveTimer = 0; this.persist(); }
+  }
+
+  /**
+   * Ghost-race upkeep: upload local state at 10Hz, interpolate
+   * remote ghosts, and keep the rendered remote cars in sync
+   * with the multiplayer roster.
+   */
+  _updateMultiplayer(dt) {
+    if (!this.mp || !this.scene) return;
+    this.mp.update(dt, this.mp.active
+      ? {
+          x: this.car.pos.x, z: this.car.pos.z, h: this.car.heading,
+          s: this.car.speedF, cp: 0,
+        }
+      : null);
+
+    // sync rendered ghosts with the service roster
+    if (this.mp.active || this.mp.phase === 'finished') {
+      for (const [userId, r] of this.mp.remotes) {
+        let car = this._remoteCars.get(userId);
+        if (!car) {
+          car = new PlayerCar(this.scene);
+          const def = CARS.find((c) => c.id === (r.info?.carId || 'toro')) || CARS[0];
+          car.configure(def, { paint: def.color, upgrades: {} });
+          car.reset(r.x, r.z, r.h);
+          this._remoteCars.set(userId, car);
+        }
+        car.pos.set(r.x, 0, r.z);
+        car.heading = r.h;
+        car.speedF = r.s;
+        if (car.handle?.group) {
+          car.handle.group.position.set(r.x, car.handle.group.position.y, r.z);
+          car.handle.group.rotation.y = r.h;
+        }
+      }
+    }
+    // dispose ghosts that left the roster
+    for (const [userId, car] of this._remoteCars) {
+      if (!this.mp.remotes.has(userId)) {
+        if (car.handle) {
+          this.scene.remove(car.handle.group);
+          car.handle.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+        }
+        this._remoteCars.delete(userId);
+      }
+    }
+  }
+
+  /** Clear all multiplayer state + ghosts (match end / quit). */
+  clearMultiplayer() {
+    for (const [, car] of this._remoteCars) {
+      if (car.handle) {
+        this.scene?.remove(car.handle.group);
+        car.handle.group.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+      }
+    }
+    this._remoteCars.clear();
+    this.mp?.clear();
   }
 
   _handleActions() {
@@ -545,8 +644,13 @@ export class Game {
   toggleMap() {
     this.mapOpen = !this.mapOpen;
     this.ui.onMap(this.mapOpen);
-    if (this.mapOpen) { this.paused = true; this._prevMode = this.mode; }
-    else { this.paused = false; this.lastTime = performance.now(); requestAnimationFrame(this._loop); }
+    if (this.mapOpen) { this.paused = true; this._prevMode = this.mode; this.mode = 'paused'; }
+    else {
+      this.paused = false;
+      this.mode = this._prevMode || 'free';
+      this.lastTime = performance.now();
+      this.loop.start();
+    }
   }
 
   // ───────── car / foot updates ─────────
@@ -592,7 +696,8 @@ export class Game {
         if (this.mode === 'play') this._fail('Out of fuel!');
         else {
           this.fuel = 20;
-          this.save.money = Math.max(0, this.save.money - 100);
+          this.saves.mutate((s) => { s.money = Math.max(0, s.money - 100); }, 'emergency-fuel');
+          this.bus.emit(EVENTS.MONEY_SPENT, { amount: 100, reason: 'emergency-fuel' });
           this.toast('🚚 Emergency fuel delivered (−$100)', 'warn', 3);
         }
         this._fuelOutT = 0;
@@ -673,6 +778,8 @@ export class Game {
       if (d < 3.2) {
         this.onFoot = false;
         this.character.visible = false;
+        this.audio.door();
+        this.audio.engineStart();
         this.toast('🚗 Back behind the wheel', 'info', 1.2);
       } else if (borrow) {
         const map = { sedan: 'metro', hatch: 'corsa', suv: 'ranger' };
@@ -682,6 +789,9 @@ export class Game {
         this.onFoot = false;
         this.character.visible = false;
         this._borrowed = def.id;
+        this.audio.door();
+        this.audio.setCarProfile(def);
+        this.audio.engineStart();
         this.toast(`🔑 Borrowed a ${def.name} (session only)`, 'info', 2.5);
       } else {
         this.toast('No vehicle nearby', 'warn', 1.2);
@@ -695,6 +805,8 @@ export class Game {
       this.character.rotation.y = this.car.heading;
       this.character.visible = true;
       this.car.input.throttle = 0;
+      this.audio.door();
+      this.audio.engineStop();
       this.toast('🚶 On foot — E to re-enter, borrow parked cars', 'info', 2.5);
     }
   }
@@ -738,10 +850,11 @@ export class Game {
           if (impact > 3.5 && this.collisionCooldown <= 0) {
             this.collisionCooldown = 0.3;
             const dmg = clamp((impact - 3) * 1.35, 2, 34);
+            const before = car.health;
             car.applyDamage(dmg, hit.nx, hit.nz);
             this.missions.registerCollision();
             this.police.addHeat(4);
-            this.audio.crash(impact / 22);
+            this.audio.crashAt(impact / 22, fx, fz, { glass: before > 55 && car.health <= 55 });
             this._shake = Math.min(1, impact / 16);
             for (let k = 0; k < 6; k++) {
               this.spawnParticle(fx, 0.6, fz, 0xffb347, { life: 0.4, size: 0.5, grow: 1, vy: rand(1, 4) });
@@ -749,6 +862,11 @@ export class Game {
             if (car.health <= 0) this._wrecked();
           }
         }
+        // sliding along a wall → metallic scrape (tangential speed)
+        const tvx = car.vel.x - hit.nx * vn;
+        const tvz = car.vel.y - hit.nz * vn;
+        const tangential = Math.hypot(tvx, tvz);
+        if (tangential > 5) this._scrape = clamp(tangential / 22, 0.2, 1);
         car.applyTransform();
       }
     }
@@ -771,7 +889,7 @@ export class Game {
         car.applyDamage(clamp(impact * 0.8, 2, 26), nx, nz);
         this.missions.registerCollision();
         this.police.addHeat(16);
-        this.audio.crash(impact / 20);
+        this.audio.crashAt(impact / 20, hitT.x, hitT.z, { glass: impact > 16 });
         this._shake = Math.min(1, impact / 18);
         this.toast('💥 Collision!', 'warn', 1);
       }
@@ -789,10 +907,10 @@ export class Game {
       hitP.p.speed *= 0.4;
       if (this.collisionCooldown <= 0) {
         this.collisionCooldown = 0.4;
-        car.applyDamage(clamp(Math.abs(car.speedF) * 0.9, 3, 30), nx, nz);
+        car.applyDamage(clamp(Math.abs(this.car.speedF) * 0.9, 3, 30), nx, nz);
         this.missions.registerCollision();
         this.police.addHeat(160);
-        this.audio.crash(0.8);
+        this.audio.crashAt(0.8, hitP.p.x, hitP.p.z, { glass: true });
         this._shake = 0.8;
         this.toast('🚓 You rammed a police car!', 'warn');
       }
@@ -809,13 +927,17 @@ export class Game {
     for (const g of this.city.gasStations) {
       if (Math.hypot(px - g.x, pz - g.z) < g.r) {
         if (this.fuel < 99.5 && Math.abs(this.car.speedF) < 6) {
-          const before = this.fuel;
+          if (!this._refueling) { this._refueling = true; this.audio.refuel(); }
           this.fuel = Math.min(100, this.fuel + STATS.refuelPerSec * dt);
-          if (Math.floor(before / 25) !== Math.floor(this.fuel / 25)) this.audio.refuelTick();
+        } else if (this._refueling) {
+          this._refueling = false;
         }
         if (this.fuel < 99) prompt = '⛽ Refueling…';
         break;
       }
+    }
+    if (this._refueling && !this.city.gasStations.some((g) => Math.hypot(px - g.x, pz - g.z) < g.r)) {
+      this._refueling = false;
     }
 
     if (!this.onFoot) {
@@ -852,7 +974,11 @@ export class Game {
     // auto-repair for a fee when opened
     const cost = Math.round((100 - this.car.health) * ECONOMY.repairCostPerHp);
     if (cost > 0 && this.save.money >= cost) {
-      this.save.money -= cost;
+      this.saves.mutate((s) => {
+        s.money -= cost;
+        s.stats.moneySpent = (s.stats.moneySpent || 0) + cost;
+      }, 'repair');
+      this.bus.emit(EVENTS.MONEY_SPENT, { amount: cost, reason: 'repair' });
       this.car.repair();
       this.toast(`🔧 Repaired for ${fmtMoney(cost)}`, 'good', 2.5);
       this.audio.money();
@@ -1045,7 +1171,11 @@ export class Game {
     for (const e of this.missions.events) {
       if (e.type === 'toast') this.toast(e.msg, e.kind);
       else if (e.type === 'money') {
-        this.save.money += e.amount;
+        this.saves.mutate((s) => {
+          s.money += e.amount;
+          s.stats.moneyEarned = (s.stats.moneyEarned || 0) + e.amount;
+        }, 'mission-event');
+        this.bus.emit(EVENTS.MONEY_EARNED, { amount: e.amount, reason: e.reason });
         this.toast(`💵 +${fmtMoney(e.amount)} (${e.reason})`, 'good');
         this.audio.money();
       }
@@ -1057,23 +1187,51 @@ export class Game {
     const wasRoam = this.missions.isRoam;
     this.missions._lastCarHealth = this.car.health;
     const res = this.missions.finalize(this.police);
+    // ghost race: report our finish to the authoritative server
+    if (this.mp?.active) this.mp.sendFinish(this.missions.elapsed * 1000);
     const prevLevel = this.level;
-    this.save.money += res.money;
-    this.save.xp += res.xp;
     const id = this.missions.active.id;
-    const prev = this.save.completed[id];
-    this.save.completed[id] = {
-      stars: Math.max(prev?.stars || 0, res.stars),
-      bestTime: res.bestTimeField
-        ? (prev?.bestTime ? Math.min(prev.bestTime, res.elapsed) : res.elapsed)
-        : (prev?.bestTime ?? null),
+    const run = {
+      missionId: id,
+      elapsedMs: Math.round(this.missions.elapsed * 1000),
+      stars: res.stars,
+      vehicleId: this._borrowed || this.save.currentCar,
+      distanceM: Math.round(this._missionDistance),
+      collisions: this.missions.collisions,
     };
+    this.saves.mutate((s) => {
+      s.money += res.money;
+      s.xp += res.xp;
+      s.stats.moneyEarned = (s.stats.moneyEarned || 0) + res.money;
+      s.stats.missionsCompleted = (s.stats.missionsCompleted || 0) + 1;
+      const prev = s.completed[id];
+      s.completed[id] = {
+        stars: Math.max(prev?.stars || 0, res.stars),
+        bestTime: res.bestTimeField
+          ? (prev?.bestTime ? Math.min(prev.bestTime, res.elapsed) : res.elapsed)
+          : (prev?.bestTime ?? null),
+      };
+    }, 'mission-complete');
     this.persist();
     this.running = false;
+    this.loop.stop();
     this.mode = 'menu';
+    this.state.set(State.RESULTS);
     this.input.unbind();
-    this.audio.success();
-    if (this.level > prevLevel) this.ui.onLevelUp(this.level);
+    this.audio.missionComplete();
+    this.audio.coin();
+    this.bus.emit(EVENTS.MISSION_COMPLETED, {
+      ...run, mission: this.missions.active, isRoam: wasRoam,
+      money: res.money, xp: res.xp,
+    });
+    this.bus.emit(EVENTS.MONEY_EARNED, { amount: res.money, reason: 'mission' });
+    this.bus.emit(EVENTS.XP_EARNED, { amount: res.xp });
+    if (this.level > prevLevel) {
+      this.ui.onLevelUp(this.level);
+      this.audio.levelUp();
+      this.bus.emit(EVENTS.PLAYER_LEVEL_UP, { level: this.level });
+    }
+    if (this.leaderboard && !wasRoam) this.leaderboard.trySubmitRun(run);
     this._applySavedCar();
     if (wasRoam) {
       this.ui.onRoamDone(res);
@@ -1084,10 +1242,19 @@ export class Game {
 
   _fail(reason) {
     const wasRoam = this.missions.isRoam;
+    const missionId = this.missions.active?.id;
+    // ghost race: a failed race is a DNF — free the seat
+    if (this.mp?.active) this.mp.leaveMatch();
+    this.saves.mutate((s) => {
+      s.stats.missionsFailed = (s.stats.missionsFailed || 0) + 1;
+    }, 'mission-failed');
     this.running = false;
+    this.loop.stop();
     this.mode = 'menu';
+    this.state.set(State.RESULTS);
     this.input.unbind();
-    this.audio.fail();
+    this.audio.gameOver();
+    this.bus.emit(EVENTS.MISSION_FAILED, { missionId, reason, isRoam: wasRoam });
     this._applySavedCar();
     if (wasRoam) this.ui.onRoamDone(null);
     else this.ui.onFail(reason);
@@ -1096,7 +1263,11 @@ export class Game {
   _wrecked() {
     if (this.mode === 'play') this._fail('Vehicle destroyed!');
     else {
-      this.save.money = Math.max(0, this.save.money - 300);
+      this.saves.mutate((s) => {
+        s.money = Math.max(0, s.money - 300);
+        s.stats.moneySpent = (s.stats.moneySpent || 0) + Math.min(300, s.money + 300);
+      }, 'recovery');
+      this.bus.emit(EVENTS.MONEY_SPENT, { amount: 300, reason: 'recovery' });
       this.car.repair();
       this.fuel = Math.max(this.fuel, 40);
       this.car.reset(this.city.garage.x, this.city.garage.z + 6, 0);
@@ -1107,10 +1278,16 @@ export class Game {
   _busted() {
     const fine = ECONOMY.bustedFinePerStar * Math.max(1, this.police.stars);
     this.police.clearAll();
+    this.audio.busted();
     if (this.mode === 'play') {
       this._fail(`Busted! Fine: ${fmtMoney(fine)}`);
     } else {
-      this.save.money = Math.max(0, this.save.money - fine);
+      this.saves.mutate((s) => {
+        s.money = Math.max(0, s.money - fine);
+        s.stats.moneySpent = (s.stats.moneySpent || 0) + Math.min(fine, s.money + fine);
+        s.stats.busts = (s.stats.busts || 0) + 1;
+      }, 'busted');
+      this.bus.emit(EVENTS.MONEY_SPENT, { amount: fine, reason: 'busted' });
       this.car.repair();
       this.fuel = Math.max(this.fuel, 30);
       this.car.reset(this.city.policeStation.x, this.city.policeStation.z + 6, 0);
@@ -1454,28 +1631,96 @@ export class Game {
   }
 
   // ───────── audio glue ─────────
+  //
+  // Single per-frame pass: listener follows the camera, the engine
+  // gets full drive state (rpm/throttle/gear/nitro/damage), tires
+  // split into squeal vs drift scrub, wind/rain/ambience track the
+  // world, and the police siren is POSITIONED at the nearest
+  // pursuer so it chases through the stereo field.
   _updateAudio(dt) {
     const a = this.audio;
     if (!a.ctx) return;
+    a.updateListener(this.camera, dt);
+    a.frame();
+
     if (this.onFoot) {
-      a.engineOff();
-      a.skid(0); a.wind(0);
+      a.engineSuspend();
+      a.mgr.setLoop('tire.skid', 0);
+      a.mgr.setLoop('tire.drift', 0);
+      a.mgr.setLoop('tire.road', 0);
+      a.wind(0);
     } else {
-      a.engineTick(this.car.rpm, this.input.state.throttle, Math.abs(this.car.speedF), this.car.nitroActive);
-      a.skid(clamp((this.car.slip - 3) / 8, 0, 1) * (Math.abs(this.car.speedF) > 5 ? 1 : 0));
+      const inp = this.input.state;
+      // gear change (auto or manual) → shift cut + clunk
+      if (this._lastGear !== undefined && this.car.gear !== this._lastGear) a.gearShift();
+      this._lastGear = this.car.gear;
+
+      a.engineUpdate({
+        rpm: this.car.rpm,
+        throttle: this.car.input.throttle,
+        brake: this.car.input.brake,
+        speed: this.car.speedF,
+        gear: this.car.gear,
+        nitro: this.car.nitroActive,
+        handbrake: !!this.car.input.handbrake,
+        airborne: this.car.airborne,
+        health: this.car.health,
+      }, dt);
+
+      a.tires({
+        slip: this.car.slip,
+        speed: this.car.speedF,
+        braking: this.car.input.brake > 0.8 && this.car.speedF > 8,
+        handbrake: !!this.car.input.handbrake,
+        wheelspin: this.car.wheelspin,
+      });
       a.wind(Math.abs(this.car.speedF));
     }
-    // siren by nearest pursuer
+
+    // wall scrape decays fast when not grinding
+    this._scrape = Math.max(0, (this._scrape || 0) - dt * 3);
+    a.setScrape(this._scrape);
+
+    // siren: positioned at the closest active pursuer
     const pursuit = this.police.pursuers.filter((p) => !p.retreat);
     if (pursuit.length) {
-      const d = Math.min(...pursuit.map((p) => Math.hypot(p.x - this.car.pos.x, p.z - this.car.pos.z)));
-      a.siren(true, clamp(1 - d / 120, 0.15, 1));
+      let best = pursuit[0], bd = Infinity;
+      for (const p of pursuit) {
+        const d = Math.hypot(p.x - this.car.pos.x, p.z - this.car.pos.z);
+        if (d < bd) { bd = d; best = p; }
+      }
+      a.siren(true, best.x, best.z, clamp(1 - bd / 130, 0.15, 1));
     } else {
       a.siren(false);
     }
+
+    // rain / storm ambience
     a.rain(this.weather.rain);
-    a.ambience(TIME.nightFactor(this.dayTime) > 0.5 ? 0.3 : 1);
-    a.musicPump(a.ctx.currentTime);
+    if (this.weather.rain > 0.45 && !this.onFoot && Math.abs(this.car.speedF) > 16) {
+      this._splashT = (this._splashT || 0) - dt;
+      if (this._splashT <= 0) {
+        this._splashT = rand(1.5, 4);
+        a.splash(this.car.pos.x + rand(-2, 2), this.car.pos.z + rand(-2, 2));
+      }
+    }
+    a.ambience(TIME.nightFactor(this.dayTime));
+
+    // traffic pass-by whooshes (spatial, doppler) — throttled scan
+    this._passT = (this._passT || 0) - dt;
+    if (this._passT <= 0) {
+      this._passT = 0.4;
+      for (const c of this.traffic.cars) {
+        const p = this.traffic._carPos(c);
+        const d = Math.hypot(p.x - this.car.pos.x, p.z - this.car.pos.z);
+        if (d < 16 && c.speed > 6 && !c.passed) {
+          c.passed = true;
+          a.trafficPass(p.x, p.z, p.hx * c.speed, p.hz * c.speed);
+        } else if (d > 30) {
+          c.passed = false;
+        }
+      }
+    }
+
     // indicator tick while hazards blink
     if (this.car.hazards) {
       const ph = Math.floor(performance.now() / 350) % 2;

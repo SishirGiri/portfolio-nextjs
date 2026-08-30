@@ -23,7 +23,6 @@ const FILTERS = [
   { key: 'AI / Machine Learning', label: 'AI / Machine Learning' },
   { key: 'JavaScript', label: 'JavaScript' },
   { key: 'Python', label: 'Python' },
-  { key: 'C Programming', label: 'C Programming' },
 ];
 
 function matches(p: Project, key: string): boolean {
